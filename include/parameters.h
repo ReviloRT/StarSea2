@@ -1,0 +1,9 @@
+#ifndef PARAMETERS_H
+#define PARAMETERS_H
+
+#define SCREEN_WIDTH   1280
+#define SCREEN_HEIGHT  720
+#define FRAME_RATE 30
+
+
+#endif // PARAMETERS_H
