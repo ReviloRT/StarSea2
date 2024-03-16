@@ -11,7 +11,9 @@ solve_dynamics() {
     if ((_end > 0) && (_time >= _end)) return;
 
     while (dt_remaining >= DBL_MIN) {
-        std::swap(curr_idxs[1],curr_idxs[2]);
+        int temp = curr_idxs[1];
+        curr_idxs[1] = curr_idxs[2];
+        curr_idxs[2] = temp;
 
         input->read_lock();
         output->write_lock();
@@ -30,9 +32,9 @@ solve_dynamics() {
     }
 
     idx_lock.lock();
-    new_idxs[1] = curr_idxs[2];
-    new_idxs[3] = curr_idxs[1];
-    new_idxs[2] = curr_idxs[3];
+    new_idxs[2] = curr_idxs[1];
+    new_idxs[3] = curr_idxs[2];
+    new_idxs[1] = curr_idxs[3];
     idx_lock.unlock();
 }
 
@@ -74,6 +76,7 @@ complete_step() {
     idx_lock.lock();
     curr_idxs = new_idxs;
     idx_lock.unlock();
+    
 }
 
 template<class T_integrator,class T_state> 
@@ -105,18 +108,22 @@ get_time() {
 }
 
 template class Solver<IntegratorBase<State>,State>;
+template class Solver<NoIntegration<State>,State>;
 template class Solver<Euler<State>,State>;
 template class Solver<Euler2ndOrder<State>,State>;
 template class Solver<RK4<State>,State>;
 template class Solver<RKN4<State>,State>;
 
+
 template class Solver<IntegratorBase<GravityPoints>,GravityPoints>;
+template class Solver<NoIntegration<GravityPoints>,GravityPoints>;
 template class Solver<Euler<GravityPoints>,GravityPoints>;
 template class Solver<Euler2ndOrder<GravityPoints>,GravityPoints>;
 template class Solver<RK4<GravityPoints>,GravityPoints>;
 template class Solver<RKN4<GravityPoints>,GravityPoints>;
 
 template class Solver<IntegratorBase<Orbit>,Orbit>;
+template class Solver<NoIntegration<Orbit>,Orbit>;
 template class Solver<Euler<Orbit>,Orbit>;
 template class Solver<Euler2ndOrder<Orbit>,Orbit>;
 template class Solver<RK4<Orbit>,Orbit>;

@@ -14,7 +14,7 @@ class Solver {
 private:
 
     double _time = 0;
-    double _step_dt = 0;
+    double _step_dt = 1;
     double _end = 0;
 
     T_integrator integrator;

@@ -4,13 +4,13 @@
 template<class T_state>
 double IntegratorBase<T_state>::solve(T_state &stateIn, T_state &stateOut){
     stateOut = stateIn;
-    return 0;
+    return 1;
 }
 
 template<class T_state>
 double NoIntegration<T_state>::solve(T_state &stateIn, T_state &stateOut){
     stateIn.solve_dynamics(stateOut);
-    return 0;
+    return 1;
 }
 
 template<class T_state>
@@ -87,18 +87,21 @@ double RKN4<T_state>::solve(T_state &stateIn, T_state &stateOut) {
 }
 
 template class IntegratorBase<State>;
+template class NoIntegration<State>;
 template class Euler<State>;
 template class Euler2ndOrder<State>;
 template class RK4<State>;
 template class RKN4<State>;
 
 template class IntegratorBase<GravityPoints>;
+template class NoIntegration<GravityPoints>;
 template class Euler<GravityPoints>;
 template class Euler2ndOrder<GravityPoints>;
 template class RK4<GravityPoints>;
 template class RKN4<GravityPoints>;
 
 template class IntegratorBase<Orbit>;
+template class NoIntegration<Orbit>;
 template class Euler<Orbit>;
 template class Euler2ndOrder<Orbit>;
 template class RK4<Orbit>;
