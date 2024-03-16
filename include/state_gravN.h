@@ -16,7 +16,7 @@ public:
     GravityPoints(const GravityPoints &other);
     // GravityPoints& operator=(const GravityPoints &other);
 
-    virtual void solve_dynamics(GravityPoints &output) const;
+    virtual void solve_deltas(GravityPoints &output) const;
     virtual void solve_interactions(GravityPoints &output) const;
     virtual void render(SDL_Renderer* sdlr) const override;
 

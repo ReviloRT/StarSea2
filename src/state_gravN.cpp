@@ -9,7 +9,7 @@ GravityPoints::GravityPoints(const GravityPoints &other) : State(other) {}
 //     return *this;
 // }
 
-void GravityPoints::solve_dynamics(GravityPoints &output) const {
+void GravityPoints::solve_deltas(GravityPoints &output) const {
     output<<*this;
     output.zero();
     for (int i = 0; i < numPoints(); i++) {

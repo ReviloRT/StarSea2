@@ -170,13 +170,14 @@ void State::write_unlock() {
     change_lock.unlock();
 }
 
-void State::solve_dynamics(State &output) const {
+void State::solve_next_state(State &output, double param) const {
     output = *this;
-
+}
+void State::solve_deltas(State &output) const {
+    output = *this;
 }
 void State::solve_interactions(State &output) const {
     output = *this;
-
 }
 void State::render(SDL_Renderer* sldr) const {
     std::cout << "Rendered DataArray!" << std::endl;

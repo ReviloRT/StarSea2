@@ -9,7 +9,7 @@ double IntegratorBase<T_state>::solve(T_state &stateIn, T_state &stateOut){
 
 template<class T_state>
 double NoIntegration<T_state>::solve(T_state &stateIn, T_state &stateOut){
-    stateIn.solve_dynamics(stateOut);
+    stateIn.solve_deltas(stateOut);
     return 1;
 }
 
@@ -20,7 +20,7 @@ void Euler<T_state>::set_dt(double new_dt) {
 
 template<class T_state>
 double Euler<T_state>::solve(T_state &stateIn, T_state &stateOut){
-    stateIn.solve_dynamics(this->k1);
+    stateIn.solve_deltas(this->k1);
     stateOut = stateIn;
     // std::cout << "Euler, accel[0] = " << stateOut.data_1[0] <<", " << stateOut.data_1[1]<<", " << stateOut.data_1[2]  << std::endl;
     stateOut.pm(this->k1,this->dt);
@@ -29,7 +29,7 @@ double Euler<T_state>::solve(T_state &stateIn, T_state &stateOut){
 
 template<class T_state>
 double Euler2ndOrder<T_state>::solve(T_state &stateIn, T_state &stateOut){
-    stateIn.solve_dynamics(this->k1);
+    stateIn.solve_deltas(this->k1);
     stateOut = stateIn;
     stateOut.pm(this->k1,this->dt);
     stateOut.downpm(this->k1,this->dt*this->dt);
@@ -38,18 +38,18 @@ double Euler2ndOrder<T_state>::solve(T_state &stateIn, T_state &stateOut){
 
 template<class T_state>
 double RK4<T_state>::solve(T_state &stateIn, T_state &stateOut) {
-    stateIn.solve_dynamics(this->k1);
+    stateIn.solve_deltas(this->k1);
     this->y1 = stateIn;
     this->y1.pm(this->k1,0.5*this->dt);
-    this->y1.solve_dynamics(this->k2);
+    this->y1.solve_deltas(this->k2);
 
     this->y2 = stateIn;
     this->y2.pm(this->k2,0.5*this->dt);
-    this->y2.solve_dynamics(this->k3);
+    this->y2.solve_deltas(this->k3);
 
     this->y3 = stateIn;
     this->y3.pm(this->k3,1*this->dt);
-    this->y3.solve_dynamics(this->k4);
+    this->y3.solve_deltas(this->k4);
     
     stateOut = stateIn;
     stateOut.pm(this->k1, 1.0/6.0*this->dt);
@@ -61,21 +61,21 @@ double RK4<T_state>::solve(T_state &stateIn, T_state &stateOut) {
 
 template<class T_state>
 double RKN4<T_state>::solve(T_state &stateIn, T_state &stateOut) {
-    stateIn.solve_dynamics(this->k1);
+    stateIn.solve_deltas(this->k1);
     this->y1 = stateIn;
     this->y1.pm(this->k1,0.5*this->dt);
     this->y1.downpm(this->k1,0.125*this->dt*this->dt);
-    this->y1.solve_dynamics(this->k2);
+    this->y1.solve_deltas(this->k2);
 
     this->y2 = stateIn;
     this->y2.pm(this->k2,0.5*this->dt);
     this->y2.downpm(this->k2,0.125*this->dt*this->dt);
-    this->y2.solve_dynamics(this->k3);
+    this->y2.solve_deltas(this->k3);
 
     this->y3 = stateIn;
     this->y3.pm(this->k3,this->dt);
     this->y3.downpm(this->k3,this->dt*this->dt);
-    this->y3.solve_dynamics(this->k4);
+    this->y3.solve_deltas(this->k4);
 
     stateOut = stateIn;
     stateOut.pm(this->k1, 1.0/6.0*this->dt);

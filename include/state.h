@@ -52,7 +52,8 @@ public:
     void write_lock();
     void write_unlock();
 
-    virtual void solve_dynamics(State &output) const;
+    virtual void solve_next_state(State &output, double param) const;
+    virtual void solve_deltas(State &output) const;
     virtual void solve_interactions(State &output) const;
     virtual void render(SDL_Renderer* sdlr) const;
 };

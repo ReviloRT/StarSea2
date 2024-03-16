@@ -12,22 +12,21 @@ double Orbit::kepler(double eccentricity, double mean_anomaly, double tollerance
         error_dash = 1 - eccentricity*cos(eccentric_anomaly);
         eccentric_anomaly -= error / error_dash;
 
-        // std::cout << "Error: " << error << std::endl;
+        // std::cout << "Error: " << error << ", " << eccentric_anomaly << ", " << error_dash << std::endl;
     }
 
     double theta = 2.0 * atan(sqrt((1 + eccentricity)/(1-eccentricity)) * tan(eccentric_anomaly/2.0));
+    // std::cout << "Kepler Theta: " << theta <<  ", " << tan(eccentric_anomaly/2.0) << ", " << sqrt((1 + eccentricity)/(1-eccentricity)) << ", " << sqrt((1 + eccentricity)/(1-eccentricity)) * tan(eccentric_anomaly/2.0) << std::endl; 
     return theta;
 }
 
-Orbit::Orbit() : State() {}
 
-Orbit::Orbit(ClassicalOrbitalElements new_object) : State() {
+Orbit::Orbit() : State() {}
+Orbit::Orbit(OrbitalElements new_object) : State() {
     objects.push_back(new_object);
-    set_path_samples(path_samples);
 }
-Orbit::Orbit(std::vector<ClassicalOrbitalElements> new_objects) : State() {
+Orbit::Orbit(std::vector<OrbitalElements> new_objects) : State() {
     objects = new_objects;
-    set_path_samples(path_samples);
 }
 Orbit::Orbit(const Orbit &other) : State(other) {
     *this = other;
@@ -36,102 +35,89 @@ Orbit::Orbit(const Orbit &other) : State(other) {
 Orbit& Orbit::operator=(const Orbit &other) {
     State::operator=(other);
     objects = other.objects;
-    path_samples = other.path_samples;
-    solved = other.solved;
-    tollerance = other.tollerance;
+    tolerance = other.tolerance;
     render_scale = other.render_scale;
+    gravitational_param = other.gravitational_param;
+    time = other.time;
     return *this;
 }
 
-void Orbit::set_end_time(double end) {
-    end_time = end;
-    data_0.assign(objects.size()*end_time/dt*3,0);
-    data_1.assign(objects.size()*end_time/dt*3,0);
-}
-void Orbit::set_dt(double new_dt) {
-    dt = new_dt;
-    data_0.assign(objects.size()*end_time/dt*3,0);
-    data_1.assign(objects.size()*end_time/dt*3,0);
-}
-void Orbit::set_tollerance(double tol) {
-    tollerance = tol;
+void Orbit::set_tolerance(double tol) {
+    tolerance = tol;
 }
 void Orbit::set_render_scale(double scale) {
     render_scale = scale;
 }
-
-int Orbit::id_to_index(int obji, int id, int dim) const {
-    return obji*path_samples*3 + id*3+dim;
-}
-int Orbit::index_to_obj(int index) const {
-    return index/(path_samples*3);
-}
-int Orbit::index_to_id(int index) const {
-    return (index - index_to_obj(index) * path_samples*3)/3;
-}
-int Orbit::index_to_dim(int index) const {
-    return (index  - index_to_obj(index) * path_samples*3 - index_to_id(index)*3);
-}
-void Orbit::polarToCartesian(double rad, double theta, double &x, double &y) const {
-    x = rad * sin(theta);
-    y = rad * cos(theta);
+void Orbit::set_gravitational_param(double mu) {
+    gravitational_param = mu;
 }
 
-void Orbit::solve_dynamics(Orbit &output) const {
-    if (solved == path_samples) return;
-    
-    // std::cout << solved << ", " << path_samples << ", " << objects.size() << std::endl;
-
+void Orbit::solve_next_state(Orbit &output, double dt) const {
     output = *this;
     for (int i = 0; i < objects.size(); i++) {
-        double mean_anomaly = objects[i].mean_anomaly + 2 * M_PI * solved / (path_samples-2);
-        double eccentricty = objects[i].eccentricity;
-        double theta = kepler(eccentricty, mean_anomaly, tollerance);
-        double radius = objects[i].semimajor_axis * (1- eccentricty)  * (1- eccentricty) / (1 + eccentricty * cos(theta));
-        output.data_0[id_to_index(i,solved,0)] = radius;
-        output.data_0[id_to_index(i,solved,1)] = theta;
-    }
-    
-    output.solved ++;
-}
-void Orbit::solve_interactions(Orbit &output) const {
-    output = *this;
+        OrbitalElements const &o = objects[i];
+        double period = 2 * M_PI * sqrt(o.semimajor_axis*o.semimajor_axis*o.semimajor_axis / gravitational_param) / (24*60*60);
+        double mean_anomaly = o.mean_anomaly + 2 * M_PI * (dt / period);
+        double theta = kepler(o.eccentricity, mean_anomaly, tolerance);
+        double radius = o.semimajor_axis * (1 - o.eccentricity * o.eccentricity) / (1 + o.eccentricity * cos(theta));
+        
+        // std::cout << "Solve Next State 1: " << period << ", " << mean_anomaly << ", " << radius << ", " << theta << ", " << std::endl;
+        // std::cout << "Solve Next State 2: " << o.eccentricity << ", " << tolerance << ", " << o.semimajor_axis << ", " << dt << ", " << std::endl;
 
+        output.objects[i].true_anomaly = theta;
+        output.objects[i].mean_anomaly = mean_anomaly;
+        output.objects[i].radius = radius;
+        output.objects[i].x = radius * cos(theta);
+        output.objects[i].y = radius * sin(theta);
+        output.objects[i].solved = true;
+    }
+    output.time += dt;
 }
 void Orbit::render(SDL_Renderer* sdlr) const {
-
-    if (solved == 0) {return;}
 
     SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
 
     for (int obji = 0; obji < objects.size(); obji++) {
+        OrbitalElements const &o = objects[obji];
 
-        double cart_x, cart_y; 
-        double rad = data_0[id_to_index(obji,0,0)] * render_scale;
-        double theta = data_0[id_to_index(obji,0,1)];
-        polarToCartesian(rad, theta, cart_x, cart_y);
+        if (o.solved == false) break;
 
-        int last_px = coord_to_px(cart_x);
-        int last_py = coord_to_py(cart_y);
-        int px, py;
+        int px = coord_to_px(o.x*render_scale);
+        int py = coord_to_py(o.y*render_scale);
 
-        // std::cout << "First point at: " << rad << ", " << theta << ", " << px << ", " << py <<  std::endl;
+        // std::cout << "pix points " << px << ", " << py << ", " << o.x << ", " << o.y << std::endl;
+        
+        SDL_Rect rect;
+        rect.x = px-5;
+        rect.y = py-5;
+        rect.w = 10;
+        rect.h = 10;
+        SDL_RenderDrawRect(sdlr,&rect);
+        
+    }
+    SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
+}
+void Orbit::render(SDL_Renderer* sdlr, Orbit &last) const {
 
-        for (int i = 1; i < solved; i++) {
-            rad = data_0[id_to_index(obji,i,0)]  * render_scale;
-            theta = data_0[id_to_index(obji,i,1)];
-            polarToCartesian(rad, theta, cart_x, cart_y);
-            px = coord_to_px(cart_x);
-            py = coord_to_py(cart_y);
+    SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
 
-            // std::cout << "Point at: " << rad << ", " << theta << ", " << px << ", " << py <<  std::endl;
-            
-            SDL_RenderDrawLine(sdlr, last_px, last_py, px, py);
+    for (int obji = 0; obji < objects.size(); obji++) {
+        OrbitalElements const &o = objects[obji];
+        OrbitalElements const &o_last = last.objects[obji];
 
-            last_px = px;
-            last_py = py;
+        if (o_last.solved == false) continue;
 
-        }
+        int px_last = coord_to_px(o_last.x*render_scale);
+        int py_last = coord_to_py(o_last.y*render_scale);
+
+        int px = coord_to_px(o.x*render_scale);
+        int py = coord_to_py(o.y*render_scale);
+        SDL_RenderDrawLine(sdlr, px, py, px_last, py_last);
+
+        // std::cout << "pix points " << px << ", " << py << ", " << o.x*render_scale << ", " << o.y*render_scale << std::endl;
+
+
+        
         
     }
     SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
