@@ -1,7 +1,7 @@
 #ifndef INTEGRATORBASE_H
 #define INTEGRATORBASE_H
 
-#include "parameters.h"
+#include "ss_parameters.h"
 #include "state.h"
 #include "state_gravN.h"
 #include "state_orbit.h"

@@ -1,7 +1,7 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef STARSEA_UTILS_H
+#define STARSEA_UTILS_H
 
-#include "parameters.h"
+#include "ss_parameters.h"
 #include <iostream>
 #include <string>
 
@@ -10,6 +10,6 @@
 int coord_to_px(double coordx);
 int coord_to_py(double coordy);
 void print(std::string str);
+uint64_t get_cycles();
 
-
-#endif // UTILS_H
+#endif // STARSEA_UTILS_H

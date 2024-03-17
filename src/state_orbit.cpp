@@ -52,9 +52,9 @@ void Orbit::set_gravitational_param(double mu) {
     gravitational_param = mu;
 }
 
-void Orbit::solve_next_state(Orbit &output, double dt) const {
+double Orbit::solve_next_state(Orbit &output, double dt) const {
     output = *this;
-    for (int i = 0; i < objects.size(); i++) {
+    for (size_t i = 0; i < objects.size(); i++) {
         OrbitalElements const &o = objects[i];
         double period = 2 * M_PI * sqrt(o.semimajor_axis*o.semimajor_axis*o.semimajor_axis / gravitational_param) / (24*60*60);
         double mean_anomaly = o.mean_anomaly + 2 * M_PI * (dt / period);
@@ -72,12 +72,13 @@ void Orbit::solve_next_state(Orbit &output, double dt) const {
         output.objects[i].solved = true;
     }
     output.time += dt;
+    return dt;
 }
 void Orbit::render(SDL_Renderer* sdlr) const {
 
     SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
 
-    for (int obji = 0; obji < objects.size(); obji++) {
+    for (size_t obji = 0; obji < objects.size(); obji++) {
         OrbitalElements const &o = objects[obji];
 
         if (o.solved == false) break;
@@ -101,7 +102,7 @@ void Orbit::render(SDL_Renderer* sdlr, Orbit &last) const {
 
     SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
 
-    for (int obji = 0; obji < objects.size(); obji++) {
+    for (size_t obji = 0; obji < objects.size(); obji++) {
         OrbitalElements const &o = objects[obji];
         OrbitalElements const &o_last = last.objects[obji];
 

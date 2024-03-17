@@ -4,10 +4,10 @@ GravityPoints::GravityPoints() : State() {}
 GravityPoints::GravityPoints(std::vector<double> new_data) : State(new_data) {}
 GravityPoints::GravityPoints(std::vector<double> new_data_0, std::vector<double> new_data_1) : State(new_data_0,new_data_1) {}
 GravityPoints::GravityPoints(const GravityPoints &other) : State(other) {}
-// GravityPoints& GravityPoints::operator=(const GravityPoints &other) {
-//     State::operator=(other);
-//     return *this;
-// }
+GravityPoints& GravityPoints::operator=(const GravityPoints &other) {
+    State::operator=(other);
+    return *this;
+}
 
 void GravityPoints::solve_deltas(GravityPoints &output) const {
     output<<*this;

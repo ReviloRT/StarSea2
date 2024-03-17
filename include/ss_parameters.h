@@ -1,5 +1,5 @@
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
+#ifndef STARSEA_PARAMETERS_H
+#define STARSEA_PARAMETERS_H
 
 #define PROJECT_NAME "starsea2"
 #define WINDOW_NAME "StarSea2"
@@ -9,4 +9,4 @@
 #define FRAME_RATE 30
 
 
-#endif // PARAMETERS_H
+#endif // STARSEA_PARAMETERS_H

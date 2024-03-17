@@ -35,10 +35,12 @@ State& State::operator<<(const State &other) {
         this->data_1.assign(other.data_1.size(),0);
     };
     order = other.order;
+    return *this;
 }
 State& State::zero() {
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] = 0;
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] = 0;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] = 0;
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] = 0;
+    return *this;
 }
 
 State& State::operator+=(const State &other) {
@@ -46,8 +48,8 @@ State& State::operator+=(const State &other) {
     if (this->data_0.size() != other.data_0.size()) return *this;
     if (this->data_1.size() != other.data_1.size()) return *this;
 
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] += other.data_0[i];
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] += other.data_1[i];
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] += other.data_0[i];
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] += other.data_1[i];
     
     return *this;
     
@@ -57,8 +59,8 @@ State& State::operator-=(const State &other) {
     if (this->data_0.size() != other.data_0.size()) return *this;
     if (this->data_1.size() != other.data_1.size()) return *this;
 
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] -= other.data_0[i];
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] -= other.data_1[i];
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] -= other.data_0[i];
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] -= other.data_1[i];
     
     return *this;
 }
@@ -67,8 +69,8 @@ State& State::operator*=(const State &other) {
     if (this->data_0.size() != other.data_0.size()) return *this;
     if (this->data_1.size() != other.data_1.size()) return *this;
 
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] *= other.data_0[i];
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] *= other.data_1[i];
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] *= other.data_0[i];
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] *= other.data_1[i];
     
     return *this;
 }
@@ -77,33 +79,33 @@ State& State::operator/=(const State &other) {
     if (this->data_0.size() != other.data_0.size()) return *this;
     if (this->data_1.size() != other.data_1.size()) return *this;
 
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] /= other.data_0[i];
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] /= other.data_1[i];
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] /= other.data_0[i];
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] /= other.data_1[i];
     
     return *this;
 }
 
 State& State::operator+=(double val) {
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] += val;
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] += val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] += val;
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] += val;
 
     return *this;
 }
 State& State::operator-=(double val) {
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] -= val;
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] -= val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] -= val;
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] -= val;
 
     return *this;
 }
 State& State::operator*=(double val) {
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] *= val;
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] *= val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] *= val;
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] *= val;
 
     return *this;
 }
 State& State::operator/=(double val) {
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] /= val;
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] /= val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] /= val;
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] /= val;
 
     return *this;
 }
@@ -117,8 +119,8 @@ State& State::pm(const State &other, double val) {
         std::cout << "Error pm data_1" << std::endl;
         return *this;
     }
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] += other.data_0[i]*val;
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] += other.data_1[i]*val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] += other.data_0[i]*val;
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] += other.data_1[i]*val;
     return *this;
 }
 State& State::mm(const State &other, double val) {
@@ -130,18 +132,18 @@ State& State::mm(const State &other, double val) {
         std::cout << "Error pm data_1" << std::endl;
         return *this;
     }
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] -= other.data_0[i]*val;
-    for (int i = 0; i < this->data_1.size(); i++) this->data_1[i] -= other.data_1[i]*val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] -= other.data_0[i]*val;
+    for (size_t i = 0; i < this->data_1.size(); i++) this->data_1[i] -= other.data_1[i]*val;
     return *this;
 }
 State& State::downpm(const State &other, double val) {
     if (this->data_0.size() != other.data_1.size()) return *this;
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] += other.data_1[i]*val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] += other.data_1[i]*val;
     return *this;
 }
 State& State::downmm(const State &other, double val) {
     if (this->data_0.size() != other.data_1.size()) return *this;
-    for (int i = 0; i < this->data_0.size(); i++) this->data_0[i] -= other.data_1[i]*val;
+    for (size_t i = 0; i < this->data_0.size(); i++) this->data_0[i] -= other.data_1[i]*val;
     return *this;
 }
 
@@ -170,8 +172,9 @@ void State::write_unlock() {
     change_lock.unlock();
 }
 
-void State::solve_next_state(State &output, double param) const {
+double State::solve_next_state(State &output, double param) const {
     output = *this;
+    return param;
 }
 void State::solve_deltas(State &output) const {
     output = *this;

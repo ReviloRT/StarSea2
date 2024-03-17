@@ -1,8 +1,8 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "parameters.h"
-#include "utils.h"
+#include "ss_parameters.h"
+#include "helper.h"
 
 #include <vector>
 #include <mutex>
@@ -52,7 +52,7 @@ public:
     void write_lock();
     void write_unlock();
 
-    virtual void solve_next_state(State &output, double param) const;
+    virtual double solve_next_state(State &output, double param) const;
     virtual void solve_deltas(State &output) const;
     virtual void solve_interactions(State &output) const;
     virtual void render(SDL_Renderer* sdlr) const;

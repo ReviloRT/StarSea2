@@ -56,7 +56,7 @@ public:
     void set_render_scale(double scale);
     void set_gravitational_param(double mu);
 
-    void solve_next_state(Orbit &output, double dt) const;
+    double solve_next_state(Orbit &output, double dt) const;
     virtual void render(SDL_Renderer* sdlr) const override;
     void render(SDL_Renderer* sdlr, Orbit &last) const;
 

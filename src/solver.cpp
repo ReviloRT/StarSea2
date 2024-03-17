@@ -78,8 +78,8 @@ solve_step() {
         input.read_lock();
         output.write_lock();
 
-        input.solve_next_state(output,subdt);
-        this->_time += subdt;
+        double elapsed = input.solve_next_state(output,subdt);
+        this->_time += elapsed;
         this->counter ++;
 
         output.write_unlock();
@@ -91,15 +91,15 @@ template<class T_state>
 void StepSolver<T_state>::
 render(SDL_Renderer* sdlr) {
 
-    for (int i = 1; i < counter; i++) {
-        this->states[i].read_lock();
-        this->states[i].render(sdlr,states[i-1]);
-        this->states[i].read_unlock();
-    }
+    // for (int i = 1; i < counter; i++) {
+    //     this->states[i].read_lock();
+    //     this->states[i].render(sdlr,states[i-1]);
+    //     this->states[i].read_unlock();
+    // }
 
-    // this->states[this->counter].read_lock();
-    // this->states[this->counter].render(sdlr);
-    // this->states[this->counter].read_unlock();
+    this->states[this->counter].read_lock();
+    this->states[this->counter].render(sdlr);
+    this->states[this->counter].read_unlock();
 
 }
 template<class T_state> 
@@ -217,7 +217,9 @@ solve_step() {
 
 
 template class Solver<Orbit>;
+template class Solver<RobotState>;
 template class StepSolver<Orbit>;
+template class StepSolver<RobotState>;
 
 template class IntegratorSolver<IntegratorBase<State>,State>;
 template class IntegratorSolver<Euler<State>,State>;

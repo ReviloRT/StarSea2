@@ -1,10 +1,11 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include "parameters.h"
+#include "ss_parameters.h"
 #include "state.h"
 #include "state_gravN.h"
 #include "state_orbit.h"
+#include "state_robot.h"
 #include "integrator.h"
 #include <algorithm>
 #include <array>
