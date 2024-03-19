@@ -84,140 +84,6 @@ void RobotState::set_model(PhysicalRobot *m_ptr) {
     model = m_ptr;
 }
 
-
-double RobotState::pow(double raw, double exponent) {
-    return std::pow(raw,exponent);
-}
-double RobotState::map(double value, double low_in, double high_in, double low_out, double high_out) {
-    return (value - low_in) * (high_out - low_out)/(high_in - low_in) + low_out;
-}
-double RobotState::min(double in1, double in2) {
-    return std::min(in1,in2);
-}
-double RobotState::max(double in1, double in2) {
-    return std::max(in1,in2);
-}
-
-uint64_t RobotState::micros() {
-    return code_time;
-}
-uint64_t RobotState::millis() {
-    return code_time/1000;
-}
-void RobotState::delay(int millis) {
-    code_time += millis*1000;
-}
-void RobotState::delayMicroseconds(int micros) {
-    code_time += micros;
-}
-void RobotState::infiniteWhile() {
-    set.stuck = true;
-}
-
-void RobotState::pinMode(int pin, bool direction) {
-    switch (pin){
-    case LED_BUILTIN:
-        set.led_pindir = direction;
-        break;
-    case GYROSCOPE_PIN:
-        set.gyro_pindir = direction;
-        break;
-    case IR_SHORT_PIN_0:
-        set.irs_0_pindir = direction;
-        break;
-    case IR_SHORT_PIN_1:
-        set.irs_1_pindir = direction;
-        break;
-    case IR_LONG_PIN_0:
-        set.irl_0_pindir = direction;
-        break;
-    case IR_LONG_PIN_1:
-        set.irl_1_pindir = direction;
-        break;
-    case T0_PIN:
-        break;
-    case T1_PIN:
-        break;
-    case T2_PIN:
-        break;
-    case T3_PIN:
-        break;
-    case FL_MOTOR_PIN:
-        set.m_FL_pindir = direction;
-        break;
-    case FR_MOTOR_PIN:
-        set.m_FR_pindir = direction;
-        break;
-    case BL_MOTOR_PIN:
-        set.m_RL_pindir = direction;
-        break;
-    case BR_MOTOR_PIN:
-        set.m_RR_pindir = direction;
-        break;
-    case A0:
-        set.bat_pindir = direction;
-        break;
-    default:
-        break;
-    }
-}
-void RobotState::digitalWrite(int pin, bool value) {
-    if (pin == LED_BUILTIN) {
-        if (set.led_pindir == INPUT) return;
-        set.led_value = value;
-    }
-}
-void RobotState::pwmWrite(int pin, int micros) {
-    double motor_percent = map(micros,1000,2000,-100,100);
-    switch (pin) {
-    case FL_MOTOR_PIN:
-        if (set.m_FL_pindir == OUTPUT)
-        set.m_FL_power = motor_percent;
-        break;
-    case FR_MOTOR_PIN:
-        if (set.m_FR_pindir == OUTPUT)
-        set.m_FR_power = motor_percent;
-        break;
-    case BL_MOTOR_PIN:
-        if (set.m_RL_pindir == OUTPUT)
-        set.m_RL_power = motor_percent;
-        break;
-    case BR_MOTOR_PIN:
-        if (set.m_RR_pindir == OUTPUT)
-        set.m_RR_power = motor_percent;
-        break;
-    default:
-        break;
-    }
-}
-uint16_t RobotState::analogRead(int pin) {
-    switch (pin){
-    case GYROSCOPE_PIN:
-        return get_gyro();
-    case IR_SHORT_PIN_0:
-        return get_infrared(pin);
-    case IR_SHORT_PIN_1:
-        return get_infrared(pin);
-    case IR_LONG_PIN_0:
-        return get_infrared(pin);
-    case IR_LONG_PIN_1:
-        return get_infrared(pin);
-    case T0_PIN:
-        break;
-    case T1_PIN:
-        break;
-    case T2_PIN:
-        break;
-    case T3_PIN:
-        break;
-    case A0:
-        return get_battery();
-    default:
-        break;
-    }
-    return 0;
-}
-
 unsigned long RobotState::ultrasonic_pulse() {
     if (set.ul_T_pindir == INPUT) return 0;
     if (set.ul_E_pindir == OUTPUT) return 0;
@@ -287,13 +153,11 @@ double RobotState::get_battery() {
     if (set.bat_pindir == OUTPUT) return 0;
     return map(set.battery_percent,0,100,0,1023);
 }
-
 void RobotState::motors_to_vel() {
     data_1[0] = 0.25 * 0.01 *  ( set.m_FL_power + set.m_FR_power + set.m_RL_power + set.m_RR_power);
     data_1[1] = 0.25 * 0.01 *  ( set.m_FL_power - set.m_FR_power - set.m_RL_power + set.m_RR_power);
     data_1[2] = 0.25 * 0.01 * 1/ (model->wheelf + model->wheels) * (-set.m_FL_power + set.m_FR_power - set.m_RL_power + set.m_RR_power);
 }
-
 
 double RobotState::solve_next_state(RobotState &output, double dt) const {
     // std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
@@ -327,7 +191,6 @@ double RobotState::solve_next_state(RobotState &output, double dt) const {
     }
     return elapsed_dt;
 }
-
 void RobotState::render(SDL_Renderer* sdlr) const {
     SDL_Rect rect;
     rect.x = coord_to_px((data_0[0]-model->width/2.0)*ROBOT_RENDER_SCALE);
@@ -335,6 +198,157 @@ void RobotState::render(SDL_Renderer* sdlr) const {
     rect.w = coord_to_px(model->width*ROBOT_RENDER_SCALE);
     rect.h = coord_to_px(model->length*ROBOT_RENDER_SCALE);
     SDL_RenderDrawRect(sdlr,&rect);
+}
+
+uint64_t RobotState::get_code_time() {
+    return code_time;
+}
+void RobotState::add_code_time(uint64_t time) {
+    code_time + time;
+}
+void RobotState::stuck(bool stuck) {
+    set.stuck = stuck;
+}
+CodeState& RobotState::get_robot_set() {
+    return set;
+}
+
+double pow(double raw, double exponent) {
+    return std::pow(raw,exponent);
+}
+double map(double value, double low_in, double high_in, double low_out, double high_out) {
+    return (value - low_in) * (high_out - low_out)/(high_in - low_in) + low_out;
+}
+double min(double in1, double in2) {
+    return std::min(in1,in2);
+}
+double max(double in1, double in2) {
+    return std::max(in1,in2);
+}
+
+uint64_t micros() {
+    return robot->get_code_time();
+}
+uint64_t millis() {
+    return robot->get_code_time()/1000;
+}
+void delay(int millis) {
+    robot->add_code_time(millis*1000);
+}
+void delayMicroseconds(int micros) {
+    robot->add_code_time(micros);
+}
+void infiniteWhile() {
+    robot->stuck(true);
+}
+
+
+void pinMode(int pin, bool direction) {
+    CodeState &set = robot->get_robot_set();
+    switch (pin){
+    case LED_BUILTIN:
+        set.led_pindir = direction;
+        break;
+    case GYROSCOPE_PIN:
+        set.gyro_pindir = direction;
+        break;
+    case IR_SHORT_PIN_0:
+        set.irs_0_pindir = direction;
+        break;
+    case IR_SHORT_PIN_1:
+        set.irs_1_pindir = direction;
+        break;
+    case IR_LONG_PIN_0:
+        set.irl_0_pindir = direction;
+        break;
+    case IR_LONG_PIN_1:
+        set.irl_1_pindir = direction;
+        break;
+    case T0_PIN:
+        break;
+    case T1_PIN:
+        break;
+    case T2_PIN:
+        break;
+    case T3_PIN:
+        break;
+    case FL_MOTOR_PIN:
+        set.m_FL_pindir = direction;
+        break;
+    case FR_MOTOR_PIN:
+        set.m_FR_pindir = direction;
+        break;
+    case BL_MOTOR_PIN:
+        set.m_RL_pindir = direction;
+        break;
+    case BR_MOTOR_PIN:
+        set.m_RR_pindir = direction;
+        break;
+    case A0:
+        set.bat_pindir = direction;
+        break;
+    default:
+        break;
+    }
+}
+void digitalWrite(int pin, bool value) {
+    CodeState &set = robot->get_robot_set();
+    if (pin == LED_BUILTIN) {
+        if (set.led_pindir == INPUT) return;
+        set.led_value = value;
+    }
+}
+void pwmWrite(int pin, int micros) {
+    CodeState &set = robot->get_robot_set();
+    double motor_percent = map(micros,1000,2000,-100,100);
+    switch (pin) {
+    case FL_MOTOR_PIN:
+        if (set.m_FL_pindir == OUTPUT)
+        set.m_FL_power = motor_percent;
+        break;
+    case FR_MOTOR_PIN:
+        if (set.m_FR_pindir == OUTPUT)
+        set.m_FR_power = motor_percent;
+        break;
+    case BL_MOTOR_PIN:
+        if (set.m_RL_pindir == OUTPUT)
+        set.m_RL_power = motor_percent;
+        break;
+    case BR_MOTOR_PIN:
+        if (set.m_RR_pindir == OUTPUT)
+        set.m_RR_power = motor_percent;
+        break;
+    default:
+        break;
+    }
+}
+uint16_t analogRead(int pin) {
+    CodeState &set = robot->get_robot_set();
+    switch (pin){
+    case GYROSCOPE_PIN:
+        return robot->get_gyro();
+    case IR_SHORT_PIN_0:
+        return robot->get_infrared(pin);
+    case IR_SHORT_PIN_1:
+        return robot->get_infrared(pin);
+    case IR_LONG_PIN_0:
+        return robot->get_infrared(pin);
+    case IR_LONG_PIN_1:
+        return robot->get_infrared(pin);
+    case T0_PIN:
+        break;
+    case T1_PIN:
+        break;
+    case T2_PIN:
+        break;
+    case T3_PIN:
+        break;
+    case A0:
+        return robot->get_battery();
+    default:
+        break;
+    }
+    return 0;
 }
 
 

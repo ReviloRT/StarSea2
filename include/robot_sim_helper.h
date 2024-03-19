@@ -27,6 +27,7 @@
 
 #define ROBOT_RENDER_SCALE 0.1
 
+// #define String std::string
 class String : public std::string {
 public:
     String(double);
@@ -94,22 +95,22 @@ struct CodeState {
 
 };
 
-struct SerialSim {
+struct SoftwareSerial {
 private:
 public:
-    SerialSim();
-    SerialSim(int pin_tx, int pin_rx);
+    SoftwareSerial();
+    SoftwareSerial(int pin_tx, int pin_rx);
     void begin(int baud_rate);
     void print(std::string val);
     void print(int val);
     void print(double val);
 };
 
-struct ServoSim {
+struct Servo {
 private:
     int pin = -1;
 public:
-    ServoSim();
+    Servo();
     void attach(int pin);
     void writeMicroseconds(int micros);
 };

@@ -6,7 +6,7 @@ sdl2_dep = dependency('sdl2')
 sdl2_main_dep = dependency('sdl2main')
 sdl2_image_dep = dependency('sdl2_image')
 
-inc = include_directories(['include','submodules/705-Project1/include'])
+inc = include_directories(['include','submodules/706Project1/include'])
 
 sources = ['src/starsea2.cpp',
            'src/integrator.cpp',
@@ -18,23 +18,23 @@ sources = ['src/starsea2.cpp',
            'src/robot_sim_helper.cpp',
            'src/helper.cpp']
 
-robot_sources = ['submodules/705-Project1/src/basedrive.cpp',
-           'submodules/705-Project1/src/blink.cpp',
-           'submodules/705-Project1/src/gyro.cpp',
-           'submodules/705-Project1/src/InfraRed.cpp',
-           'submodules/705-Project1/src/logger.cpp',
-           'submodules/705-Project1/src/main.cpp',
-           'submodules/705-Project1/src/motor.cpp',
-           'submodules/705-Project1/src/phototrans.cpp',
-           'submodules/705-Project1/src/PID.cpp',
-           'submodules/705-Project1/src/sensors.cpp',
-           'submodules/705-Project1/src/ultrasonic.cpp',
-           'submodules/705-Project1/src/utils.cpp'
+robot_sources = ['submodules/706Project1/src/basedrive.cpp',
+           'submodules/706Project1/src/blink.cpp',
+           'submodules/706Project1/src/gyro.cpp',
+           'submodules/706Project1/src/InfraRed.cpp',
+           'submodules/706Project1/src/logger.cpp',
+           'submodules/706Project1/src/main.cpp',
+           'submodules/706Project1/src/motor.cpp',
+           'submodules/706Project1/src/phototrans.cpp',
+           'submodules/706Project1/src/PID.cpp',
+           'submodules/706Project1/src/sensors.cpp',
+           'submodules/706Project1/src/ultrasonic.cpp',
+           'submodules/706Project1/src/utils.cpp'
            ]
 
 
 executable('starsea2',
-           sources,
+           sources, robot_sources,
            include_directories: inc,
            install : true,
           #  win_subsystem: 'windows',
