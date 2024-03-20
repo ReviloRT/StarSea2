@@ -1,7 +1,7 @@
 
 #include "robot_sim_helper.h"
 
-String::String(double a) {std::to_string(a);}
+String::String(double a) {*this = std::to_string(a);}
 String::String(const char a[]) : std::string(a) {}
 String::String(std::basic_string<char> a) : std::string(a) {}
 String String::operator+(const char a[]) {return *this + std::string(a);}

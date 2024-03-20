@@ -25,7 +25,7 @@
 
 #define LED_BUILTIN 11
 
-#define ROBOT_RENDER_SCALE 0.1
+#define ROBOT_RENDER_SCALE 0.0008
 
 // #define String std::string
 class String : public std::string {
@@ -46,8 +46,8 @@ struct Wall {
 };
 
 struct PhysicalRobot {
-    double width = 10;
-    double length = 10;
+    double width = 100;
+    double length = 100;
     double wheelf = 8;
     double wheels = 8;
 

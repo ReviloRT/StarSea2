@@ -37,15 +37,17 @@ double Arena::get_distance(double x, double y, double rot) const {
     
 }
 void Arena::render(SDL_Renderer* sdlr) const {
+    SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
     for (auto w : walls) {
-        SDL_Rect rect;
-        rect.x = coord_to_px(w.x1*ROBOT_RENDER_SCALE);
-        rect.y = coord_to_px(w.y1*ROBOT_RENDER_SCALE);
-        rect.w = coord_to_px((w.x2-w.x1)*ROBOT_RENDER_SCALE);
-        rect.h = coord_to_px((w.y2-w.y1)*ROBOT_RENDER_SCALE);
-        SDL_RenderDrawRect(sdlr,&rect);
+        int px1 = coord_to_px(w.x1*ROBOT_RENDER_SCALE);
+        int py1 = coord_to_py(w.y1*ROBOT_RENDER_SCALE);
+        int px2 = coord_to_px(w.x2*ROBOT_RENDER_SCALE);
+        int py2 = coord_to_py(w.y2*ROBOT_RENDER_SCALE);
+        SDL_RenderDrawLine(sdlr,px1,py1,px2,py2);
+        // std::cout << "double (" << w.x1 << " , " << w.y1 << "), (" << w.x2 << " , " << w.y2 << ")" << "                 " <<std::endl;
+        // std::cout << "px     (" << px1 << " , " << py1 << "), (" << px2 << " , " << py2 << ")" << "                 " <<std::endl;
     }
-    
+    SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
 }
 
 
@@ -66,14 +68,12 @@ RobotState::RobotState(const RobotState &other) : State(other){
     arena = other.arena;
     model = other.model;
     set = other.set;
-    code_time = other.code_time;
 }
 RobotState& RobotState::operator=(const RobotState &other) {
     State::operator=(other);
     arena = other.arena;
     model = other.model;
     set = other.set;
-    code_time = other.code_time;
     return *this;
 }
 
@@ -151,71 +151,76 @@ double RobotState::get_gyro() {
 }
 double RobotState::get_battery() {
     if (set.bat_pindir == OUTPUT) return 0;
-    return map(set.battery_percent,0,100,0,1023);
+    return map(set.battery_percent,0,100,720,860);
 }
-void RobotState::motors_to_vel() {
-    data_1[0] = 0.25 * 0.01 *  ( set.m_FL_power + set.m_FR_power + set.m_RL_power + set.m_RR_power);
-    data_1[1] = 0.25 * 0.01 *  ( set.m_FL_power - set.m_FR_power - set.m_RL_power + set.m_RR_power);
-    data_1[2] = 0.25 * 0.01 * 1/ (model->wheelf + model->wheels) * (-set.m_FL_power + set.m_FR_power - set.m_RL_power + set.m_RR_power);
+void RobotState::motors_to_delta(RobotState &other) const {
+    other.data_0[0] = 0.25 * 0.01 *  ( set.m_FL_power + set.m_FR_power + set.m_RL_power + set.m_RR_power);
+    other.data_0[1] = 0.25 * 0.01 *  ( set.m_FL_power - set.m_FR_power - set.m_RL_power + set.m_RR_power);
+    other.data_0[2] = 0.25 * 0.01 * 1/ (model->wheelf + model->wheels) * (-set.m_FL_power + set.m_FR_power - set.m_RL_power + set.m_RR_power);
 }
 
-double RobotState::solve_next_state(RobotState &output, double dt) const {
-    // std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
-
-    // std::cout << "Time difference 1 = " << std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() << "us" << std::endl;
-
+void RobotState::solve_deltas(RobotState &output, double target_time) {
+    robot = this;
     output = *this;
-    robot = &output;
-    double elapsed_dt = 0;
-    while (elapsed_dt < dt) {
-        double start_code_time = output.code_time;
 
-        uint64_t start_cycles = get_cycles();
+    // std::cout << " Solve Deltas A: " << this->get_state_time() << ", " << robot->get_state_time() << ", " << output.get_state_time() << std::endl;
+
+    if (robot->is_stuck()) robot->add_code_time(max(target_time - robot->get_state_time(),0));
+
+    while (robot->get_state_time() < target_time) {
+
         std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
 
-        if (set.setup_complete == false) robot_setup();
-        else robot_loop();
+        if (robot->get_robot_set().setup_complete == false) {
+            setup();
+            robot->get_robot_set().setup_complete = true;
+        } else {
+            loop();
+        }
 
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        uint64_t end_cycles = get_cycles();
         
         uint64_t nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-        uint64_t cycles_per_micro = (end_cycles-start_cycles)/nanos*1000;
-        uint64_t time_on_mega = nanos * (cycles_per_micro)/(20.0 * 1000.0);
-
-        output.code_time += time_on_mega;
-        output.motors_to_vel();
-        double loopTime = output.code_time - start_code_time;
-        output.downpm(output, loopTime);
-        elapsed_dt += loopTime;
+        // uint64_t time_on_mega = nanos*(4000.0/20.0);
+        uint64_t time_on_mega = nanos*(4000.0/20.0);
+        robot->state_time += (double)time_on_mega/1000.0/1000.0/1000.0;
     }
-    return elapsed_dt;
-}
-void RobotState::render(SDL_Renderer* sdlr) const {
-    SDL_Rect rect;
-    rect.x = coord_to_px((data_0[0]-model->width/2.0)*ROBOT_RENDER_SCALE);
-    rect.y = coord_to_px((data_0[1]-model->length/2.0)*ROBOT_RENDER_SCALE);
-    rect.w = coord_to_px(model->width*ROBOT_RENDER_SCALE);
-    rect.h = coord_to_px(model->length*ROBOT_RENDER_SCALE);
-    SDL_RenderDrawRect(sdlr,&rect);
+    robot->motors_to_delta(output);
+    // std::cout << " Solve Deltas B: " << this->get_state_time() << ", " << robot->get_state_time() << ", " << output.get_state_time() << std::endl;
+
 }
 
-uint64_t RobotState::get_code_time() {
-    return code_time;
+void RobotState::render(SDL_Renderer* sdlr) const {
+    SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
+    SDL_Rect rect;
+    rect.x = coord_to_px((data_0[0] - model->width/2.0)*ROBOT_RENDER_SCALE);
+    rect.y = coord_to_py((data_0[1] - model->length/2.0)*ROBOT_RENDER_SCALE);
+    rect.w = length_to_px(model->width * ROBOT_RENDER_SCALE);
+    rect.h = length_to_py(model->length * ROBOT_RENDER_SCALE);
+    SDL_RenderDrawRect(sdlr,&rect);
+    arena->render(sdlr);
+    SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
 }
-void RobotState::add_code_time(uint64_t time) {
-    code_time + time;
+
+double RobotState::get_state_time() {
+    return state_time;
+}
+void RobotState::add_code_time(double time) {
+    state_time + time;
 }
 void RobotState::stuck(bool stuck) {
     set.stuck = stuck;
+}
+bool RobotState::is_stuck() {
+    return set.stuck;
 }
 CodeState& RobotState::get_robot_set() {
     return set;
 }
 
-double pow(double raw, double exponent) {
-    return std::pow(raw,exponent);
-}
+// double pow(double raw, double exponent) {
+//     return std::pow(raw,exponent);
+// }
 double map(double value, double low_in, double high_in, double low_out, double high_out) {
     return (value - low_in) * (high_out - low_out)/(high_in - low_in) + low_out;
 }
@@ -227,16 +232,16 @@ double max(double in1, double in2) {
 }
 
 uint64_t micros() {
-    return robot->get_code_time();
+    return robot->get_state_time()*1000.0*1000.0;
 }
 uint64_t millis() {
-    return robot->get_code_time()/1000;
+    return robot->get_state_time()*1000.0;
 }
 void delay(int millis) {
-    robot->add_code_time(millis*1000);
+    robot->add_code_time(((double)millis)/1000.0);
 }
 void delayMicroseconds(int micros) {
-    robot->add_code_time(micros);
+    robot->add_code_time(((double)micros)/1000.0/1000.0);
 }
 void infiniteWhile() {
     robot->stuck(true);

@@ -18,6 +18,7 @@ State::State(const State &other) {
     data_0 = other.data_0;
     data_1 = other.data_1;
     order = other.order;
+    state_time = other.state_time;
 
 }
 
@@ -25,6 +26,7 @@ State& State::operator=(const State &other) {
     data_0 = other.data_0;
     data_1 = other.data_1;
     order = other.order;
+    state_time = other.state_time;
     return *this;
 }
 State& State::operator<<(const State &other) {
@@ -35,6 +37,7 @@ State& State::operator<<(const State &other) {
         this->data_1.assign(other.data_1.size(),0);
     };
     order = other.order;
+    state_time = other.state_time;
     return *this;
 }
 State& State::zero() {
@@ -176,14 +179,17 @@ double State::solve_next_state(State &output, double param) const {
     output = *this;
     return param;
 }
-void State::solve_deltas(State &output) const {
+void State::solve_deltas(State &output, double time) const {
     output = *this;
 }
 void State::solve_interactions(State &output) const {
     output = *this;
 }
 void State::render(SDL_Renderer* sldr) const {
-    std::cout << "Rendered DataArray!" << std::endl;
+    std::cout << "Rendered State!" << std::endl;
 }
 
 
+double State::get_state_time() const {
+    return state_time;
+}

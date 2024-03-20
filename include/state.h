@@ -21,6 +21,8 @@ public:
     std::vector<double> data_0;
     std::vector<double> data_1;
     int order = 0;
+
+    double state_time = 0;
     
 public:
     State();
@@ -52,8 +54,10 @@ public:
     void write_lock();
     void write_unlock();
 
+    double get_state_time() const;
+
     virtual double solve_next_state(State &output, double param) const;
-    virtual void solve_deltas(State &output) const;
+    virtual void solve_deltas(State &output, double time) const;
     virtual void solve_interactions(State &output) const;
     virtual void render(SDL_Renderer* sdlr) const;
 };

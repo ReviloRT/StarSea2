@@ -4,7 +4,7 @@
 
 template<class T_state> 
 void Solver<T_state>::
-set_step_dt(double step_dt) {
+set_dt(double step_dt) {
     this->_step_dt = step_dt;
 }
 
@@ -43,73 +43,95 @@ render(SDL_Renderer* sdlr) {}
 
 
 
-template<class T_state> 
-void StepSolver<T_state>::
-set_step_dt(double step_dt) {
-    Solver<T_state>::set_step_dt(step_dt);
-    counter = 0;
-    this->states.assign(this->_end/this->_step_dt*this->_substeps+2,T_state());
-}
-template<class T_state> 
-void StepSolver<T_state>::
-set_end(double end) {
-    Solver<T_state>::set_end(end);
-    counter = 0;
-    this->states.assign(this->_end/this->_step_dt*this->_substeps+2,T_state());
-}
-template<class T_state> 
-void StepSolver<T_state>::
+// template<class T_state> 
+// void StepSolver<T_state>::
+// set_step_dt(double step_dt) {
+//     Solver<T_state>::set_step_dt(step_dt);
+//     counter = 0;
+//     this->states.assign(this->_end/this->_step_dt*this->_substeps+2,T_state());
+// }
+// template<class T_state> 
+// void StepSolver<T_state>::
+// set_end(double end) {
+//     Solver<T_state>::set_end(end);
+//     counter = 0;
+//     this->states.assign(this->_end/this->_step_dt*this->_substeps+2,T_state());
+// }
+// template<class T_state> 
+// void StepSolver<T_state>::
+// set_substeps(int substeps) {
+//     Solver<T_state>::set_substeps(substeps);
+//     counter = 0;
+//     this->states.assign(this->_end/this->_step_dt*this->_substeps+2,T_state());
+// }
+// template<class T_state> 
+// void StepSolver<T_state>::
+// solve_step() {
+//     double subdt = this->_step_dt/this->_substeps;
+
+//     for (int i = 0; i < this->_substeps; i++) {
+//         if ((this->_end > 0) && (this->_time >= this->_end)) return;
+
+//         T_state &input = this->states[this->counter];
+//         T_state &output = this->states[this->counter+1];
+
+//         input.read_lock();
+//         output.write_lock();
+
+//         // input.solve_next_state(output,this->_time + subdt);
+
+//         this->_time += subdt;
+//         this->counter ++;
+
+//         output.write_unlock();
+//         input.read_unlock();
+//     }
+
+// }
+// template<class T_state> 
+// void StepSolver<T_state>::
+// render(SDL_Renderer* sdlr) {
+
+//     // for (int i = 1; i < counter; i++) {
+//     //     this->states[i].read_lock();
+//     //     this->states[i].render(sdlr,states[i-1]);
+//     //     this->states[i].read_unlock();
+//     // }
+
+//     this->states[this->counter].read_lock();
+//     this->states[this->counter].render(sdlr);
+//     this->states[this->counter].read_unlock();
+
+// }
+// template<class T_state> 
+// void StepSolver<T_state>::
+// set_state(T_state state) {
+//     this->states[0] = state;
+// }
+
+
+
+template<class T_integrator,class T_state> 
+void IntegratorSolver<T_integrator,T_state>::
 set_substeps(int substeps) {
     Solver<T_state>::set_substeps(substeps);
-    counter = 0;
-    this->states.assign(this->_end/this->_step_dt*this->_substeps+2,T_state());
-}
-template<class T_state> 
-void StepSolver<T_state>::
-solve_step() {
-    for (int i = 0; i < this->_substeps; i++) {
-        if ((this->_end > 0) && (this->_time >= this->_end)) return;
-
-        double subdt = this->_step_dt/this->_substeps;
-
-        T_state &input = this->states[this->counter];
-        T_state &output = this->states[this->counter+1];
-
-        input.read_lock();
-        output.write_lock();
-
-        double elapsed = input.solve_next_state(output,subdt);
-        this->_time += elapsed;
-        this->counter ++;
-
-        output.write_unlock();
-        input.read_unlock();
-    }
-
-}
-template<class T_state> 
-void StepSolver<T_state>::
-render(SDL_Renderer* sdlr) {
-
-    // for (int i = 1; i < counter; i++) {
-    //     this->states[i].read_lock();
-    //     this->states[i].render(sdlr,states[i-1]);
-    //     this->states[i].read_unlock();
-    // }
-
-    this->states[this->counter].read_lock();
-    this->states[this->counter].render(sdlr);
-    this->states[this->counter].read_unlock();
-
-}
-template<class T_state> 
-void StepSolver<T_state>::
-set_state(T_state state) {
-    this->states[0] = state;
+    double subdt = this->_step_dt/this->_substeps;
+    this->integrator.set_dt(subdt);
 }
 
+template<class T_integrator,class T_state> 
+void IntegratorSolver<T_integrator,T_state>::
+set_dt(double dt) {
+    Solver<T_state>::set_dt(dt);
+    double subdt = this->_step_dt/this->_substeps;
+    this->integrator.set_dt(subdt);
+}
 
-
+template<class T_integrator,class T_state> 
+void IntegratorSolver<T_integrator,T_state>::
+set_interactions(bool enable) {
+    this->include_interactions = enable;
+}
 
 
 
@@ -118,10 +140,12 @@ void IntegratorSolver<T_integrator,T_state>::
 solve_dynamics() {
     T_state *input = &calc_states[curr_idxs[0]];
     T_state *output = &calc_states[curr_idxs[1]];
-    
-    double dt_remaining = this->_step_dt;
+    // std::cout << "Solve Dynamics A: " << curr_idxs[0] <<" , " << curr_idxs[1] << std::endl;
+    // std::cout << "Solve Dynamics B: " << input->get_state_time() <<" , " << output->get_state_time() << std::endl;
+
     if ((this->_end > 0) && (this->_time >= this->_end)) return;
 
+    double dt_remaining = this->_step_dt;
     while (dt_remaining >= DBL_MIN) {
         int temp = curr_idxs[1];
         curr_idxs[1] = curr_idxs[2];
@@ -130,7 +154,10 @@ solve_dynamics() {
         input->read_lock();
         output->write_lock();
 
-        double dt = integrator.solve(*input,*output);
+        // std::cout << "Solve Dynamics C: " <<  input->get_state_time() << ", " <<  output->get_state_time() << std::endl;
+        double dt = integrator.solve(*input,*output, this->_time);
+        // std::cout << "Solve Dynamics D: " <<  dt << ", " << this->_time << std::endl;
+        // std::cout << "Solve Dynamics E: " <<  input->get_state_time() << ", " <<  output->get_state_time() << std::endl;
 
         output->write_unlock();
         input->read_unlock();
@@ -153,21 +180,31 @@ solve_dynamics() {
 template<class T_integrator,class T_state> 
 void IntegratorSolver<T_integrator,T_state>::
 solve_interactions() {
-    T_state &input = calc_states[curr_idxs[3]];
-    T_state &output = calc_states[curr_idxs[4]];
 
-    input.read_lock();
-    output.write_lock();
+    if (include_interactions == true) {
+        T_state &input = calc_states[curr_idxs[3]];
+        T_state &output = calc_states[curr_idxs[4]];
 
-    input.solve_interactions(output);
+        input.read_lock();
+        output.write_lock();
 
-    output.write_unlock();
-    input.read_unlock();
+        input.solve_interactions(output);
 
-    idx_lock.lock();
-    new_idxs[0] = curr_idxs[4];
-    new_idxs[4] = curr_idxs[0];
-    idx_lock.unlock();
+        output.write_unlock();
+        input.read_unlock();
+
+        idx_lock.lock();
+        new_idxs[0] = curr_idxs[4];
+        new_idxs[4] = curr_idxs[0];
+        idx_lock.unlock();
+    } else {
+        idx_lock.lock();
+        new_idxs[0] = curr_idxs[3];
+        new_idxs[3] = curr_idxs[0];
+        idx_lock.unlock();
+    }
+
+    
 }
 
 template<class T_integrator,class T_state> 
@@ -215,11 +252,12 @@ solve_step() {
 
 
 
-
+template class Solver<GravityPoints>;
 template class Solver<Orbit>;
 template class Solver<RobotState>;
-template class StepSolver<Orbit>;
-template class StepSolver<RobotState>;
+
+// template class StepSolver<Orbit>;
+// template class StepSolver<RobotState>;
 
 template class IntegratorSolver<IntegratorBase<State>,State>;
 template class IntegratorSolver<Euler<State>,State>;
@@ -232,3 +270,9 @@ template class IntegratorSolver<Euler<GravityPoints>,GravityPoints>;
 template class IntegratorSolver<Euler2ndOrder<GravityPoints>,GravityPoints>;
 template class IntegratorSolver<RK4<GravityPoints>,GravityPoints>;
 template class IntegratorSolver<RKN4<GravityPoints>,GravityPoints>;
+
+template class IntegratorSolver<IntegratorBase<RobotState>,RobotState>;
+template class IntegratorSolver<Euler<RobotState>,RobotState>;
+template class IntegratorSolver<Euler2ndOrder<RobotState>,RobotState>;
+template class IntegratorSolver<RK4<RobotState>,RobotState>;
+template class IntegratorSolver<RKN4<RobotState>,RobotState>;

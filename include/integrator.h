@@ -5,37 +5,38 @@
 #include "state.h"
 #include "state_gravN.h"
 #include "state_orbit.h"
+#include "state_robot.h"
 
 template<class T_state>
 class IntegratorBase {
 protected:
+    double dt = 1;
 public:
-    virtual double solve(T_state &stateIn, T_state &stateOut);
+    void set_dt(double dt);
+    virtual double solve(T_state &stateIn, T_state &stateOut, double time);
 };
 
 template<class T_state>
 class NoIntegration : public IntegratorBase<T_state> {
 protected:
 public:
-    virtual double solve(T_state &stateIn, T_state &stateOut);
+    virtual double solve(T_state &stateIn, T_state &stateOut, double time);
 };
 
 
 template<class T_state>
 class Euler : public IntegratorBase<T_state> {
 protected:
-    double dt = 1;
     T_state k1;
 public:
-    void set_dt(double dt);
-    virtual double solve(T_state &stateIn, T_state &stateOut);
+    virtual double solve(T_state &stateIn, T_state &stateOut, double time);
 };
 
 template<class T_state>
 class Euler2ndOrder : public Euler<T_state> {
 protected:
 public:
-    virtual double solve(T_state &stateIn, T_state &stateOut);
+    virtual double solve(T_state &stateIn, T_state &stateOut, double time);
 };
 
 template<class T_state>
@@ -48,14 +49,14 @@ protected:
     T_state y2;
     T_state y3;
 public:
-    virtual double solve(T_state &stateIn, T_state &stateOut);
+    virtual double solve(T_state &stateIn, T_state &stateOut, double time);
 };
 
 template<class T_state>
 class RKN4 : public RK4<T_state> {
 protected:
 public:
-    virtual double solve(T_state &stateIn, T_state &stateOut);
+    virtual double solve(T_state &stateIn, T_state &stateOut, double time);
 };
 
-#endif // INTEGRATORBASE_H
+#endif

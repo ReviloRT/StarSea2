@@ -29,7 +29,6 @@ private:
     PhysicalRobot *model = NULL;
 
     CodeState set;
-    uint64_t code_time = 0;
 
 public:
 
@@ -46,13 +45,19 @@ public:
     double get_infrared(int pin);
     double get_gyro();
     double get_battery();
-    void motors_to_vel();
+    void motors_to_delta(RobotState &other) const;
+
+    double get_state_time();
+    void add_code_time(double time);
+    void stuck(bool stuck);
+    bool is_stuck();
+    CodeState& get_robot_set();
     
-    double solve_next_state(RobotState &output, double dt) const;
-    virtual void render(SDL_Renderer* sdlr) const;
+    void solve_deltas(RobotState &output, double time);
+    virtual void render(SDL_Renderer* sdlr) const override;
 };
 
-double pow(double raw, double exponent);
+// double pow(double raw, double exponent);
 double map(double value, double low_in, double high_in, double low_out, double high_out);
 double min(double in1, double in2);
 double max(double in1, double in2);
@@ -69,11 +74,11 @@ void pwmWrite(int pin, int micros);
 uint16_t analogRead(int pin);
 
 
-RobotState *robot = NULL;
-SoftwareSerial Serial;
+static RobotState *robot = NULL;
+static SoftwareSerial Serial;
 
-void setup();
-void loop();
+extern void setup();
+extern void loop();
 
 
 #endif // ROBOT_STATE_H

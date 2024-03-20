@@ -9,7 +9,7 @@ GravityPoints& GravityPoints::operator=(const GravityPoints &other) {
     return *this;
 }
 
-void GravityPoints::solve_deltas(GravityPoints &output) const {
+void GravityPoints::solve_deltas(GravityPoints &output, double time) const {
     output<<*this;
     output.zero();
     for (int i = 0; i < numPoints(); i++) {

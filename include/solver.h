@@ -20,7 +20,7 @@ protected:
     int _substeps = 1;
 
 public:
-    virtual void set_step_dt(double step_dt);
+    virtual void set_dt(double step_dt);
     virtual void set_end(double end);
     virtual void set_t0(double t0);
     virtual void set_substeps(int substeps);
@@ -32,22 +32,22 @@ public:
 
 };
 
-template<class T_state>
-class StepSolver : public Solver<T_state> {
-protected:
-    int counter = 0;
-    std::vector<T_state> states;
+// template<class T_state>
+// class StepSolver : public Solver<T_state> {
+// protected:
+//     int counter = 0;
+//     std::vector<T_state> states;
 
-public:
-    void set_step_dt(double step_dt);
-    void set_end(double end);
-    void set_substeps(int substeps);
-    void set_state(T_state state);
+// public:
+//     void set_step_dt(double step_dt);
+//     void set_end(double end);
+//     void set_substeps(int substeps);
+//     void set_state(T_state state);
 
-    void solve_step();
-    void render(SDL_Renderer* sdlr);
+//     void solve_step();
+//     void render(SDL_Renderer* sdlr);
 
-};
+// };
 
 template<class T_integrator,class T_state>
 class IntegratorSolver : public Solver<T_state> {
@@ -60,10 +60,15 @@ protected:
     std::array<int,5> new_idxs = {0,1,2,3,4};
     std::mutex idx_lock;
 
+    bool include_interactions = false;
+
 public:
 
     void set_integrator(T_integrator integrator);
     void set_state(T_state state);
+    void set_dt(double step_dt);
+    void set_substeps(int substeps);
+    void set_interactions(bool interactions);
 
     void solve_step();
 
