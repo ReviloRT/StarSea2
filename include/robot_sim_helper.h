@@ -25,7 +25,7 @@
 
 #define LED_BUILTIN 11
 
-#define ROBOT_RENDER_SCALE 0.0008
+#define ROBOT_RENDER_SCALE 0.0006
 
 // #define String std::string
 class String : public std::string {
@@ -45,7 +45,7 @@ struct Wall {
     double y2;
 };
 
-struct PhysicalRobot {
+struct PhysicalModel {
     double width = 100;
     double length = 100;
     double wheelf = 8;
@@ -82,9 +82,6 @@ struct CodeState {
     bool m_FR_pindir = OUTPUT;
     bool m_RL_pindir = OUTPUT;
     bool m_RR_pindir = OUTPUT;
-
-    bool setup_complete = false;
-    bool stuck = false;
 
     bool led_value = false;
     double battery_percent = 100;

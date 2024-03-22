@@ -1,12 +1,18 @@
 #include "state_robot.h"
 
 
+ControllerState sim_robot;
+SoftwareSerial Serial;
+
+Arena& Arena::operator=(const Arena& other) {
+    return *this;
+}
 void Arena::add_wall(Wall wall) {
-    walls.push_back(wall);
+    this->walls.push_back(wall);
 }
 void Arena::add_wall(double x1, double y1, double x2, double y2) {
     Wall wall = {x1,y1,x2,y2};
-    walls.push_back(wall);
+    this->walls.push_back(wall);
 }
 double Arena::get_distance(double x, double y, double rot) const {
     
@@ -38,20 +44,24 @@ double Arena::get_distance(double x, double y, double rot) const {
 }
 void Arena::render(SDL_Renderer* sdlr) const {
     SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
-    for (auto w : walls) {
+    for (size_t i = 0; i < this->walls.size(); i++) {
+        const Wall &w = walls[i];
         int px1 = coord_to_px(w.x1*ROBOT_RENDER_SCALE);
         int py1 = coord_to_py(w.y1*ROBOT_RENDER_SCALE);
         int px2 = coord_to_px(w.x2*ROBOT_RENDER_SCALE);
         int py2 = coord_to_py(w.y2*ROBOT_RENDER_SCALE);
         SDL_RenderDrawLine(sdlr,px1,py1,px2,py2);
-        // std::cout << "double (" << w.x1 << " , " << w.y1 << "), (" << w.x2 << " , " << w.y2 << ")" << "                 " <<std::endl;
-        // std::cout << "px     (" << px1 << " , " << py1 << "), (" << px2 << " , " << py2 << ")" << "                 " <<std::endl;
+        // std::cout << "Arena: double (" << w.x1 << " , " << w.y1 << "), (" << w.x2 << " , " << w.y2 << ")" << "                 " <<std::endl;
+        // std::cout << "Arena: px     (" << px1 << " , " << py1 << "), (" << px2 << " , " << py2 << ")" << "                 " <<std::endl;
     }
     SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
 }
 
 
 
+
+
+// Init functions
 RobotState::RobotState() : State() {
     data_0.assign(3,0);
     data_1.assign(3,0);
@@ -65,66 +75,127 @@ RobotState::RobotState(std::vector<double> new_data_0, std::vector<double> new_d
     data_1 = new_data_1;
 }
 RobotState::RobotState(const RobotState &other) : State(other){
-    arena = other.arena;
-    model = other.model;
-    set = other.set;
+
 }
 RobotState& RobotState::operator=(const RobotState &other) {
     State::operator=(other);
-    arena = other.arena;
-    model = other.model;
-    set = other.set;
+
     return *this;
 }
 
-void RobotState::set_arena(Arena *a_ptr) {
-    arena = a_ptr;
+
+// Main functions
+void RobotState::solve_deltas(RobotState &output, double target_time) {
+
+    // std::cout << "Solve Delta A" << std::endl;
+    sim_robot.change_robot_state(this);
+    // std::cout << "Solve Delta B" << std::endl;
+    output = *this;
+    // std::cout << "Solve Delta C" << std::endl;
+    motors_to_delta(output);
+    // std::cout << "Solve Delta D" << std::endl;
+    sim_robot.set_target_time(target_time);
+
+    // std::cout << "Solve Delta E" << std::endl;
 }
-void RobotState::set_model(PhysicalRobot *m_ptr) {
-    model = m_ptr;
+void RobotState::render(SDL_Renderer* sdlr) const {
+    sim_robot.render(sdlr);
+    PhysicalModel &model = *sim_robot.get_model();
+    SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
+    SDL_Rect rect;
+    rect.x = coord_to_px((data_0[0] - model.width/2.0)*ROBOT_RENDER_SCALE);
+    rect.y = coord_to_py((data_0[1] - model.length/2.0)*ROBOT_RENDER_SCALE);
+    rect.w = length_to_px(model.width * ROBOT_RENDER_SCALE);
+    rect.h = length_to_py(model.length * ROBOT_RENDER_SCALE);
+    SDL_RenderDrawRect(sdlr,&rect);
+    
+    SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
 }
 
-unsigned long RobotState::ultrasonic_pulse() {
+void RobotState::motors_to_delta(RobotState &other) {
+    // std::cout << "Motor Delta A" << std::endl;
+    sim_robot.lock();
+    CodeState &set = sim_robot.get_code();
+    PhysicalModel *model = sim_robot.get_model();
+    // std::cout << "Motor Delta B" << std::endl;
+    other.data_0[1] = ( set.m_FL_power - set.m_FR_power + set.m_RL_power - set.m_RR_power);
+    other.data_0[0] = ( set.m_FL_power + set.m_FR_power + set.m_RL_power + set.m_RR_power);
+    // std::cout << "Motor Delta C" << std::endl;
+    other.data_0[2] = 0.25 * 0.01 * 1.0 / (model->wheelf + model->wheels) * (-set.m_FL_power + set.m_FR_power - set.m_RL_power + set.m_RR_power);
+    // std::cout << "Motor Delta D" << std::endl;
+    // std::cout << "Motor to delta A: " << other.data_0[0] << ", " << other.data_0[1] << ", " << other.data_0[2] << std::endl;
+    // std::cout << "Motor to delta B: " << set.m_FL_power << ", " << set.m_FR_power << ", " << set.m_RL_power << ", " << set.m_RR_power << std::endl;    
+    sim_robot.unlock();
+}
+
+double RobotState::get_data(int array, int idx) const {
+    if (array == 0) return data_0[idx];
+    if (array == 1) return data_1[idx];
+    return 0;
+}
+
+
+void ControllerState::init() {
+    r_code_thread = std::thread(run_robot_code);
+}
+
+unsigned long ControllerState::ultrasonic_pulse() {
+    lock();
     if (set.ul_T_pindir == INPUT) return 0;
     if (set.ul_E_pindir == OUTPUT) return 0;
+    double rob_x = robot_pos->get_data(0,0);
+    double rob_y = robot_pos->get_data(0,1);
+    double rob_w = robot_pos->get_data(0,2);
+    unlock();
+
+    PhysicalModel &model = *get_model();
     
-    double ul_x = data_0[0] + cos(data_0[2]) * model->ulx - sin(data_0[2]) * model->uly;  
-    double ul_y = data_0[1] - sin(data_0[2]) * model->uly + cos(data_0[2]) * model->ulx;  
-    double ul_rot = data_0[2] + model->ulrot;
-    double dist = arena->get_distance(ul_x,ul_y,ul_rot);
+    double ul_x = rob_x + cos(rob_w) * model.ulx - sin(rob_w) * model.uly;  
+    double ul_y = rob_y - sin(rob_w) * model.uly + cos(rob_w) * model.ulx;  
+    double ul_rot = rob_w + model.ulrot;
+    double dist = get_arena()->get_distance(ul_x,ul_y,ul_rot);
+    
     double measured = dist*58.0;
 
     return measured;
 }
-double RobotState::get_infrared(int pin) {
+double ControllerState::get_infrared(int pin) {
+    lock();
     if (set.gyro_pindir == OUTPUT) return 0;
+    double rob_x = robot_pos->get_data(0,0);
+    double rob_y = robot_pos->get_data(0,1);
+    double rob_w = robot_pos->get_data(0,2);
+    unlock();
+
+    PhysicalModel &model = *get_model();
+
     double model_ir_x, model_ir_y, model_ir_rot, scale, exponent;
     switch (pin) {
     case IR_SHORT_PIN_0:
-        model_ir_x = model->irS0x;
-        model_ir_y = model->irS0y;
-        model_ir_rot = model->irS0rot;
+        model_ir_x = model.irS0x;
+        model_ir_y = model.irS0y;
+        model_ir_rot = model.irS0rot;
         scale = IR_SHORT_SCALE_DATASHEET;
         exponent = IR_SHORT_EXPONENT_DATASHEET;
         break;
     case IR_SHORT_PIN_1:
-        model_ir_x = model->irS1x;
-        model_ir_y = model->irS1y;
-        model_ir_rot = model->irS1rot;
+        model_ir_x = model.irS1x;
+        model_ir_y = model.irS1y;
+        model_ir_rot = model.irS1rot;
         scale = IR_SHORT_SCALE_DATASHEET;
         exponent = IR_SHORT_EXPONENT_DATASHEET;
         break;
     case IR_LONG_PIN_0:
-        model_ir_x = model->irL0x;
-        model_ir_y = model->irL0y;
-        model_ir_rot = model->irL0rot;
+        model_ir_x = model.irL0x;
+        model_ir_y = model.irL0y;
+        model_ir_rot = model.irL0rot;
         scale = IR_LONG_SCALE_DATASHEET;
         exponent = IR_LONG_EXPONENT_DATASHEET;
         break;
     case IR_LONG_PIN_1:
-        model_ir_x = model->irL1x;
-        model_ir_y = model->irL1y;
-        model_ir_rot = model->irL1rot;
+        model_ir_x = model.irL1x;
+        model_ir_y = model.irL1y;
+        model_ir_rot = model.irL1rot;
         scale = IR_LONG_SCALE_DATASHEET;
         exponent = IR_LONG_EXPONENT_DATASHEET;
         break;
@@ -137,90 +208,83 @@ double RobotState::get_infrared(int pin) {
         break;
     }
     
-    double ir_x = data_0[0] + cos(data_0[2]) * model_ir_x - sin(data_0[2]) * model_ir_y;  
-    double ir_y = data_0[1] - sin(data_0[2]) * model_ir_y + cos(data_0[2]) * model_ir_x;  
-    double ir_rot = data_0[2] + model_ir_rot;
-    double dist = arena->get_distance(ir_x,ir_y,ir_rot);
+    double ir_x = rob_x + cos(rob_w) * model_ir_x - sin(rob_w) * model_ir_y;  
+    double ir_y = rob_y - sin(rob_w) * model_ir_y + cos(rob_w) * model_ir_x;  
+    double ir_rot = rob_w + model_ir_rot;
+    double dist = get_arena()->get_distance(ir_x,ir_y,ir_rot);
     double measured = pow(dist/scale,- exponent);
     
     return measured;
 }
-double RobotState::get_gyro() {
+double ControllerState::get_gyro() {
+    lock();
+    double rob_omega = robot_pos->get_data(1,2);
+    unlock();
     if (set.gyro_pindir == OUTPUT) return 0;
-    return map(data_1[2],-250,250,1023*0.5/5.0,1023.0*4.5/5.0);
+    return map(rob_omega,-250,250,1023*0.5/5.0,1023.0*4.5/5.0);
 }
-double RobotState::get_battery() {
+double ControllerState::get_battery() {
+    lock();
     if (set.bat_pindir == OUTPUT) return 0;
-    return map(set.battery_percent,0,100,720,860);
-}
-void RobotState::motors_to_delta(RobotState &other) const {
-    other.data_0[0] = 0.25 * 0.01 *  ( set.m_FL_power + set.m_FR_power + set.m_RL_power + set.m_RR_power);
-    other.data_0[1] = 0.25 * 0.01 *  ( set.m_FL_power - set.m_FR_power - set.m_RL_power + set.m_RR_power);
-    other.data_0[2] = 0.25 * 0.01 * 1/ (model->wheelf + model->wheels) * (-set.m_FL_power + set.m_FR_power - set.m_RL_power + set.m_RR_power);
+    double bat = set.battery_percent;
+    unlock();
+    return map(bat,0,100,720,860);
 }
 
-void RobotState::solve_deltas(RobotState &output, double target_time) {
-    robot = this;
-    output = *this;
-
-    // std::cout << " Solve Deltas A: " << this->get_state_time() << ", " << robot->get_state_time() << ", " << output.get_state_time() << std::endl;
-
-    if (robot->is_stuck()) robot->add_code_time(max(target_time - robot->get_state_time(),0));
-
-    while (robot->get_state_time() < target_time) {
-
-        std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
-
-        if (robot->get_robot_set().setup_complete == false) {
-            setup();
-            robot->get_robot_set().setup_complete = true;
-        } else {
-            loop();
-        }
-
-        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        
-        uint64_t nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-        // uint64_t time_on_mega = nanos*(4000.0/20.0);
-        uint64_t time_on_mega = nanos*(4000.0/20.0);
-        robot->state_time += (double)time_on_mega/1000.0/1000.0/1000.0;
-    }
-    robot->motors_to_delta(output);
-    // std::cout << " Solve Deltas B: " << this->get_state_time() << ", " << robot->get_state_time() << ", " << output.get_state_time() << std::endl;
-
+void ControllerState::set_target_time(double target){
+    lock();
+    if (target > target_time)
+    target_time = target;
+    unlock();
+}
+double ControllerState::get_target_time() {
+    lock();
+    double target = target_time;
+    unlock();
+    return target;
+}
+double ControllerState::get_time() {
+    lock();
+    double curr_time = time;
+    unlock();
+    return curr_time;
+}
+double ControllerState::add_time(double time_inc) {
+    lock();
+    time += time_inc;
+    double curr_time = time;
+    unlock();
+    return curr_time;
 }
 
-void RobotState::render(SDL_Renderer* sdlr) const {
-    SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
-    SDL_Rect rect;
-    rect.x = coord_to_px((data_0[0] - model->width/2.0)*ROBOT_RENDER_SCALE);
-    rect.y = coord_to_py((data_0[1] - model->length/2.0)*ROBOT_RENDER_SCALE);
-    rect.w = length_to_px(model->width * ROBOT_RENDER_SCALE);
-    rect.h = length_to_py(model->length * ROBOT_RENDER_SCALE);
-    SDL_RenderDrawRect(sdlr,&rect);
-    arena->render(sdlr);
-    SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
+void ControllerState::change_robot_state(RobotState *ptr) {
+    lock();
+    robot_pos = ptr;
+    unlock();
 }
 
-double RobotState::get_state_time() {
-    return state_time;
-}
-void RobotState::add_code_time(double time) {
-    state_time + time;
-}
-void RobotState::stuck(bool stuck) {
-    set.stuck = stuck;
-}
-bool RobotState::is_stuck() {
-    return set.stuck;
-}
-CodeState& RobotState::get_robot_set() {
+CodeState& ControllerState::get_code() {
     return set;
 }
+Arena* ControllerState::get_arena() {
+    return &arena;
+}
+PhysicalModel* ControllerState::get_model() {
+    return &model;
+}
+void ControllerState::render(SDL_Renderer* sdlr) const {
+    arena.render(sdlr);
+}
+void ControllerState::lock() {
+    thread_lock.lock();
+}
+void ControllerState::unlock() {
+    thread_lock.unlock();
+}
 
-// double pow(double raw, double exponent) {
-//     return std::pow(raw,exponent);
-// }
+
+
+// General math functions
 double map(double value, double low_in, double high_in, double low_out, double high_out) {
     return (value - low_in) * (high_out - low_out)/(high_in - low_in) + low_out;
 }
@@ -231,25 +295,28 @@ double max(double in1, double in2) {
     return std::max(in1,in2);
 }
 
+// Time functions
 uint64_t micros() {
-    return robot->get_state_time()*1000.0*1000.0;
+    return sim_robot.get_time()*1000.0*1000.0;
 }
 uint64_t millis() {
-    return robot->get_state_time()*1000.0;
+    return sim_robot.get_time()*1000.0;
 }
 void delay(int millis) {
-    robot->add_code_time(((double)millis)/1000.0);
+    sim_robot.add_time(((double)millis)/1000.0);
+    _sleep(millis);
 }
 void delayMicroseconds(int micros) {
-    robot->add_code_time(((double)micros)/1000.0/1000.0);
+    sim_robot.add_time(((double)micros)/1000.0/1000.0);
 }
 void infiniteWhile() {
-    robot->stuck(true);
+    delay(100);
 }
 
-
+// Pin functions
 void pinMode(int pin, bool direction) {
-    CodeState &set = robot->get_robot_set();
+    sim_robot.lock();
+    CodeState &set = sim_robot.get_code();
     switch (pin){
     case LED_BUILTIN:
         set.led_pindir = direction;
@@ -295,17 +362,22 @@ void pinMode(int pin, bool direction) {
     default:
         break;
     }
+    sim_robot.unlock();
 }
 void digitalWrite(int pin, bool value) {
-    CodeState &set = robot->get_robot_set();
+    sim_robot.lock();
+    CodeState &set = sim_robot.get_code();
     if (pin == LED_BUILTIN) {
         if (set.led_pindir == INPUT) return;
         set.led_value = value;
     }
+    sim_robot.unlock();
 }
 void pwmWrite(int pin, int micros) {
-    CodeState &set = robot->get_robot_set();
+    sim_robot.lock();
+    CodeState &set = sim_robot.get_code();
     double motor_percent = map(micros,1000,2000,-100,100);
+    // std::cout << "PWM Write " << micros << ", " << motor_percent << ", " << pin << std::endl;
     switch (pin) {
     case FL_MOTOR_PIN:
         if (set.m_FL_pindir == OUTPUT)
@@ -326,20 +398,26 @@ void pwmWrite(int pin, int micros) {
     default:
         break;
     }
+    sim_robot.unlock();
 }
 uint16_t analogRead(int pin) {
-    CodeState &set = robot->get_robot_set();
+    uint16_t ret = 0;
     switch (pin){
     case GYROSCOPE_PIN:
-        return robot->get_gyro();
+        ret = sim_robot.get_gyro();
+        break;
     case IR_SHORT_PIN_0:
-        return robot->get_infrared(pin);
+        ret = sim_robot.get_infrared(pin);
+        break;
     case IR_SHORT_PIN_1:
-        return robot->get_infrared(pin);
+        ret = sim_robot.get_infrared(pin);
+        break;
     case IR_LONG_PIN_0:
-        return robot->get_infrared(pin);
+        ret = sim_robot.get_infrared(pin);
+        break;
     case IR_LONG_PIN_1:
-        return robot->get_infrared(pin);
+        ret = sim_robot.get_infrared(pin);
+        break;
     case T0_PIN:
         break;
     case T1_PIN:
@@ -349,12 +427,34 @@ uint16_t analogRead(int pin) {
     case T3_PIN:
         break;
     case A0:
-        return robot->get_battery();
+        ret = sim_robot.get_battery();
+        break;
     default:
         break;
     }
-    return 0;
+    return ret;
 }
 
+void run_robot_code() {
+    setup();
+    
+    sim_robot.add_time(10.0/1000.0);
+    int last_int_time = 0;
+        
+    while(true) {
+        double sim_time = sim_robot.get_time();
+        double tar_time = sim_robot.get_target_time();
 
-
+        if ( sim_time > last_int_time) {
+            std::cout << "### Robot Thread Time: " << sim_time <<" ###" << std::endl;
+            last_int_time = (int) sim_time + 1;
+        }
+        if (tar_time > sim_time) {
+            loop();
+            sim_robot.add_time(10.0/1000.0);
+            // std::cout << "Robot Update" << std::endl;
+        }
+        std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+    }
+    
+}

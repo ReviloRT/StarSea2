@@ -8,26 +8,9 @@
 
 
 uint64_t last_time = SDL_GetTicks64();
-
-
-
-
-double manage_framerate() {
-    uint64_t now = SDL_GetTicks64();
-    double frame_time = 1000.0/FRAME_RATE;
-
-    if (now - last_time < frame_time) {
-        uint64_t delay = frame_time - (now - last_time);
-        _sleep(delay);
-    }
-
-    now = SDL_GetTicks64();
-    double fps = 1000.0/ ((double) (now - last_time));
-    last_time = now;
-    return fps;
-}
-
 int last_report = -1;
+double manage_framerate();
+
 
 int main( int argc, char* args[] )
 {
@@ -43,18 +26,16 @@ int main( int argc, char* args[] )
     solver.set_t0(0);
 
     RobotState inital_state;
-
-    Arena arena;
-    arena.add_wall(1000,1000,1000,-1000);
+    solver.set_state(inital_state);
+    
+    Arena &arena = *sim_robot.get_arena();
+    arena.add_wall(2000,1000,1000,-1000);
     arena.add_wall(1000,1000,-1000,1000);
     arena.add_wall(-1000,-1000,1000,-1000);
     arena.add_wall(-1000,-1000,-1000,1000);
-    inital_state.set_arena(&arena);
 
-    PhysicalRobot model;
-    inital_state.set_model(&model);
+    sim_robot.init();
 
-    solver.set_state(inital_state);
 
     while (true) {
         SDL_Event e;
@@ -91,4 +72,19 @@ int main( int argc, char* args[] )
     SDL_Quit();
 
     return 0;
+}
+
+double manage_framerate() {
+    uint64_t now = SDL_GetTicks64();
+    double frame_time = 1000.0/FRAME_RATE;
+
+    if (now - last_time < frame_time) {
+        uint64_t delay = frame_time - (now - last_time);
+        _sleep(delay);
+    }
+
+    now = SDL_GetTicks64();
+    double fps = 1000.0/ ((double) (now - last_time));
+    last_time = now;
+    return fps;
 }

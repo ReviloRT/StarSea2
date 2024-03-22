@@ -9,7 +9,7 @@ double IntegratorBase<T_state>::solve(T_state &stateIn, T_state &stateOut, doubl
 
 template<class T_state>
 void IntegratorBase<T_state>::set_dt(double new_dt) {
-    std::cout << "Integrator dt Set" << new_dt << std::endl;
+    std::cout << "Integrator dt set to: " << new_dt << std::endl;
     dt = new_dt;
 }
 

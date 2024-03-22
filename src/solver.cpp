@@ -158,7 +158,6 @@ solve_dynamics() {
         double dt = integrator.solve(*input,*output, this->_time);
         // std::cout << "Solve Dynamics D: " <<  dt << ", " << this->_time << std::endl;
         // std::cout << "Solve Dynamics E: " <<  input->get_state_time() << ", " <<  output->get_state_time() << std::endl;
-
         output->write_unlock();
         input->read_unlock();
 
