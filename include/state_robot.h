@@ -21,7 +21,6 @@ class Arena {
 public:
     std::vector<Wall> walls;
 public:
-    Arena& operator=(const Arena& other);
     void add_wall(Wall wall);
     void add_wall(double x1, double y1, double x2, double y2);
     double get_distance(double x, double y, double rot) const;
@@ -39,11 +38,14 @@ private:
     RobotState *robot_pos;
     std::thread r_code_thread;
 
+    double ultrasonic_pulse();
+
 public:
 
     void init();
     
-    unsigned long ultrasonic_pulse();
+    void ultrasonic_trigger();
+    bool ultrasonic_response();
     double get_infrared(int pin);
     double get_gyro();
     double get_battery();
@@ -100,6 +102,7 @@ void pinMode(int pin, bool direction);
 void digitalWrite(int pin, bool value);
 void pwmWrite(int pin, int micros);
 uint16_t analogRead(int pin);
+bool digitalRead(int pin);
 
 
 extern ControllerState sim_robot;

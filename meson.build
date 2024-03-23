@@ -33,7 +33,8 @@ robot_sources = [
            'submodules/706Project1/src/PID.cpp',
            'submodules/706Project1/src/sensors.cpp',
            'submodules/706Project1/src/ultrasonic.cpp',
-           'submodules/706Project1/src/utils.cpp'
+           'submodules/706Project1/src/utils.cpp',
+           'submodules/706Project1/src/karman.cpp'
            ]
 
 

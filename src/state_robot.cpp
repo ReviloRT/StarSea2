@@ -4,9 +4,6 @@
 ControllerState sim_robot;
 SoftwareSerial Serial;
 
-Arena& Arena::operator=(const Arena& other) {
-    return *this;
-}
 void Arena::add_wall(Wall wall) {
     this->walls.push_back(wall);
 }
@@ -15,26 +12,42 @@ void Arena::add_wall(double x1, double y1, double x2, double y2) {
     this->walls.push_back(wall);
 }
 double Arena::get_distance(double x, double y, double rot) const {
-    
+
+
     double min_distance = 1000000000000000000;
     for (auto w : walls){
-        // s*(w.x2-w.x1) - t*cos(rot) = x-w.x1;
-        // s*(w.y2-w.y1) - t*sin(rot) = y-w.y1;
+        // Parametric Equation
+        // s*(x2-x1) - t*(x4-x3) = (x3-x1);
+        // s*(y2-y1) - t*(y4-y3) = (y3-y1);
 
-        if (cos(rot)*(w.y2-w.y1)-sin(rot)*(w.x2-w.x1) == 0) continue;
-        
-        double t,s;
+        // Simplification
+        // (x4 - x3) = cos(rot)     (b1)
+        // (y4 - y4) = sin(rot)     (b2)
 
-        t = ((w.x2-w.x1)*(y-w.y1)-(x-w.x1)*(w.y2-w.y1))/(cos(rot)*(w.y2-w.y1)-sin(rot)*(w.x2-w.x1));
-        
-        if ((w.x2-w.x1) != 0) {
-            s = (x- w.x1 + t*cos(rot))/(w.x2-w.x1);
-        } else if ((w.y2-w.y1) != 0) {
-            s = (y - w.y1 + t*sin(rot))/(w.y2-w.y1);
-        } else continue;
+        // Crammers Rule
+        // for a1*x + b1*y = c1, a2*x + b2*y = c2
+        // x = (c1*b2 - c2*b1) / (a1*b2 - a2*b1)
+        // y = (a1*c2 - a2*c1) / (a1*b2 - a2*b1)
 
-        if ((s >= 0) && (t <= 1)) {
-            double dist = sqrt(s*s + t*t);
+        // Applied Crammers
+        // s = ((x3-x1)*sin(rot) - (y3-y1)*cos(rot)) / ((x2-x1)*sin(rot) - (y2-y1)*cos(rot))
+        // t = ((x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)) / ((x2-x1)*sin(rot) - (y2-y1)*cos(rot))
+
+        // Parallel check
+        // ((x2-x1)*sin(rot) - (y2-y1)*cos(rot)) == 0
+
+        // Equivalences
+        // x1 = w.x1, y1 = w.y1
+        // x2 = w.x2, y2 = w.y2
+        // x3 = x, y3 = y
+
+        double denominator = (w.x2-w.x1)*sin(rot) - (w.y2-w.y1)*cos(rot);
+        if (denominator == 0) continue;
+        double s = ((x-w.x1)*sin(rot) - (y-w.y1)*cos(rot)) / denominator;
+        double t = ((w.x2-w.x1)*(y-w.y1) - (w.y2-w.y1)*(x-w.x1)) / denominator;
+                
+        if ((s >= 0) && (s <= 1) && (t <= 0)) {
+            double dist = -t;
             if (dist < min_distance) min_distance = dist;
         }
     }
@@ -86,45 +99,36 @@ RobotState& RobotState::operator=(const RobotState &other) {
 
 // Main functions
 void RobotState::solve_deltas(RobotState &output, double target_time) {
-
-    // std::cout << "Solve Delta A" << std::endl;
     sim_robot.change_robot_state(this);
-    // std::cout << "Solve Delta B" << std::endl;
     output = *this;
-    // std::cout << "Solve Delta C" << std::endl;
     motors_to_delta(output);
-    // std::cout << "Solve Delta D" << std::endl;
     sim_robot.set_target_time(target_time);
 
-    // std::cout << "Solve Delta E" << std::endl;
 }
+
 void RobotState::render(SDL_Renderer* sdlr) const {
     sim_robot.render(sdlr);
     PhysicalModel &model = *sim_robot.get_model();
     SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
-    SDL_Rect rect;
-    rect.x = coord_to_px((data_0[0] - model.width/2.0)*ROBOT_RENDER_SCALE);
-    rect.y = coord_to_py((data_0[1] - model.length/2.0)*ROBOT_RENDER_SCALE);
-    rect.w = length_to_px(model.width * ROBOT_RENDER_SCALE);
-    rect.h = length_to_py(model.length * ROBOT_RENDER_SCALE);
-    SDL_RenderDrawRect(sdlr,&rect);
-    
+    drawRect(sdlr, data_0[0],data_0[1],model.width, model.length, data_0[2], ROBOT_RENDER_SCALE);
+    // drawRect(sdlr, data_0[0]+model.irL0x,data_0[1]+model.irL0y,model.width/10, model.length/10, data_0[2]+model.irL0rot, ROBOT_RENDER_SCALE);
+
+
     SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
+    // std::cout << data_0[0] << ", " << data_0[1] << ", " << data_0[2] << std::endl;
 }
 
+
+
 void RobotState::motors_to_delta(RobotState &other) {
-    // std::cout << "Motor Delta A" << std::endl;
     sim_robot.lock();
     CodeState &set = sim_robot.get_code();
     PhysicalModel *model = sim_robot.get_model();
-    // std::cout << "Motor Delta B" << std::endl;
-    other.data_0[1] = ( set.m_FL_power - set.m_FR_power + set.m_RL_power - set.m_RR_power);
-    other.data_0[0] = ( set.m_FL_power + set.m_FR_power + set.m_RL_power + set.m_RR_power);
-    // std::cout << "Motor Delta C" << std::endl;
-    other.data_0[2] = 0.25 * 0.01 * 1.0 / (model->wheelf + model->wheels) * (-set.m_FL_power + set.m_FR_power - set.m_RL_power + set.m_RR_power);
-    // std::cout << "Motor Delta D" << std::endl;
-    // std::cout << "Motor to delta A: " << other.data_0[0] << ", " << other.data_0[1] << ", " << other.data_0[2] << std::endl;
-    // std::cout << "Motor to delta B: " << set.m_FL_power << ", " << set.m_FR_power << ", " << set.m_RL_power << ", " << set.m_RR_power << std::endl;    
+    other.data_0[0] = ( - set.m_FL_power - set.m_FR_power + set.m_RL_power + set.m_RR_power);
+    other.data_0[1] = ( - set.m_FL_power + set.m_FR_power - set.m_RL_power + set.m_RR_power);
+    other.data_0[2] = 1.0 / (model->wheelf + model->wheels) * (- set.m_FL_power + set.m_FR_power + set.m_RL_power - set.m_RR_power);
+    std::cout << "Motor to delta A: " << other.data_0[0] << ", " << other.data_0[1] << ", " << other.data_0[2] << std::endl;
+    std::cout << "Motor to delta B: " << set.m_FL_power << ", " << set.m_FR_power << ", " << set.m_RL_power << ", " << set.m_RR_power << std::endl;    
     sim_robot.unlock();
 }
 
@@ -139,39 +143,53 @@ void ControllerState::init() {
     r_code_thread = std::thread(run_robot_code);
 }
 
-unsigned long ControllerState::ultrasonic_pulse() {
-    lock();
+double ControllerState::ultrasonic_pulse() {
     if (set.ul_T_pindir == INPUT) return 0;
     if (set.ul_E_pindir == OUTPUT) return 0;
     double rob_x = robot_pos->get_data(0,0);
     double rob_y = robot_pos->get_data(0,1);
     double rob_w = robot_pos->get_data(0,2);
-    unlock();
-
-    PhysicalModel &model = *get_model();
     
     double ul_x = rob_x + cos(rob_w) * model.ulx - sin(rob_w) * model.uly;  
     double ul_y = rob_y - sin(rob_w) * model.uly + cos(rob_w) * model.ulx;  
     double ul_rot = rob_w + model.ulrot;
     double dist = get_arena()->get_distance(ul_x,ul_y,ul_rot);
+    // std::cout << " Ultrasonic Pulse: " << dist << std::endl;
     
-    double measured = dist*58.0;
+    double pulse_time = dist*5.80/1000.0/1000.0;
 
-    return measured;
+    return pulse_time;
 }
+void ControllerState::ultrasonic_trigger() {
+    if (set.ul_T_pindir == INPUT) return;
+    double pulse_time = ultrasonic_pulse();
+    set.ul_response_1 = time + 50.0/1000.0/1000.0;
+    set.ul_response_2 = set.ul_response_1 + pulse_time;
+    // std::cout << "Ultrasonic Trigger " << time << ", " << pulse_time << ", " << set.ul_response_1 << ", " << set.ul_response_2 << std::endl;
+}
+bool ControllerState::ultrasonic_response() {
+    if (set.ul_response_2 <= time) {
+        set.ul_response_1 = 0;
+        set.ul_response_2 = 0;
+        return false;
+    } else if (set.ul_response_1 <= time) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 double ControllerState::get_infrared(int pin) {
     lock();
-    if (set.gyro_pindir == OUTPUT) return 0;
     double rob_x = robot_pos->get_data(0,0);
     double rob_y = robot_pos->get_data(0,1);
     double rob_w = robot_pos->get_data(0,2);
     unlock();
 
-    PhysicalModel &model = *get_model();
-
     double model_ir_x, model_ir_y, model_ir_rot, scale, exponent;
     switch (pin) {
     case IR_SHORT_PIN_0:
+        if (set.irs_0_pindir == OUTPUT) return 0;
         model_ir_x = model.irS0x;
         model_ir_y = model.irS0y;
         model_ir_rot = model.irS0rot;
@@ -179,6 +197,7 @@ double ControllerState::get_infrared(int pin) {
         exponent = IR_SHORT_EXPONENT_DATASHEET;
         break;
     case IR_SHORT_PIN_1:
+        if (set.irs_1_pindir == OUTPUT) return 0;
         model_ir_x = model.irS1x;
         model_ir_y = model.irS1y;
         model_ir_rot = model.irS1rot;
@@ -186,6 +205,7 @@ double ControllerState::get_infrared(int pin) {
         exponent = IR_SHORT_EXPONENT_DATASHEET;
         break;
     case IR_LONG_PIN_0:
+        if (set.irl_0_pindir == OUTPUT) return 0;
         model_ir_x = model.irL0x;
         model_ir_y = model.irL0y;
         model_ir_rot = model.irL0rot;
@@ -193,6 +213,7 @@ double ControllerState::get_infrared(int pin) {
         exponent = IR_LONG_EXPONENT_DATASHEET;
         break;
     case IR_LONG_PIN_1:
+        if (set.irl_1_pindir == OUTPUT) return 0;
         model_ir_x = model.irL1x;
         model_ir_y = model.irL1y;
         model_ir_rot = model.irL1rot;
@@ -212,8 +233,9 @@ double ControllerState::get_infrared(int pin) {
     double ir_y = rob_y - sin(rob_w) * model_ir_y + cos(rob_w) * model_ir_x;  
     double ir_rot = rob_w + model_ir_rot;
     double dist = get_arena()->get_distance(ir_x,ir_y,ir_rot);
-    double measured = pow(dist/scale,- exponent);
-    
+    double measured = pow(dist/scale,1/exponent);
+    // std::cout << "Infrared " << dist << ", " << measured << std::endl;
+
     return measured;
 }
 double ControllerState::get_gyro() {
@@ -336,6 +358,12 @@ void pinMode(int pin, bool direction) {
     case IR_LONG_PIN_1:
         set.irl_1_pindir = direction;
         break;
+    case US_PIN_TRIGGER:
+        set.ul_T_pindir = direction;
+        break;
+    case US_PIN_ECHO:
+        set.ul_E_pindir = direction;
+        break;
     case T0_PIN:
         break;
     case T1_PIN:
@@ -367,9 +395,18 @@ void pinMode(int pin, bool direction) {
 void digitalWrite(int pin, bool value) {
     sim_robot.lock();
     CodeState &set = sim_robot.get_code();
-    if (pin == LED_BUILTIN) {
+    
+    switch (pin) {
+    case LED_BUILTIN:
         if (set.led_pindir == INPUT) return;
         set.led_value = value;
+        break;
+    case US_PIN_TRIGGER:
+        if (value == false) break;
+        sim_robot.unlock();
+        sim_robot.ultrasonic_trigger();
+        sim_robot.lock();
+        break;
     }
     sim_robot.unlock();
 }
@@ -377,7 +414,6 @@ void pwmWrite(int pin, int micros) {
     sim_robot.lock();
     CodeState &set = sim_robot.get_code();
     double motor_percent = map(micros,1000,2000,-100,100);
-    // std::cout << "PWM Write " << micros << ", " << motor_percent << ", " << pin << std::endl;
     switch (pin) {
     case FL_MOTOR_PIN:
         if (set.m_FL_pindir == OUTPUT)
@@ -418,20 +454,31 @@ uint16_t analogRead(int pin) {
     case IR_LONG_PIN_1:
         ret = sim_robot.get_infrared(pin);
         break;
-    case T0_PIN:
-        break;
-    case T1_PIN:
-        break;
-    case T2_PIN:
-        break;
-    case T3_PIN:
-        break;
     case A0:
         ret = sim_robot.get_battery();
         break;
     default:
         break;
     }
+    return ret;
+}
+bool digitalRead(int pin) {
+    bool ret = 0;
+    double cur_time = sim_robot.get_time();
+    sim_robot.lock();
+    CodeState &set = sim_robot.get_code();
+    switch (pin){
+    case US_PIN_ECHO:
+        if (set.ul_E_pindir == OUTPUT) ret = false;
+        ret = sim_robot.ultrasonic_response();
+        break;
+    default:
+        ret = 0;
+        break;
+    }
+    
+    sim_robot.unlock();
+    sim_robot.add_time(10.0/1000.0/1000.0);
     return ret;
 }
 
@@ -451,7 +498,7 @@ void run_robot_code() {
         }
         if (tar_time > sim_time) {
             loop();
-            sim_robot.add_time(10.0/1000.0);
+            sim_robot.add_time(50.0/1000.0);
             // std::cout << "Robot Update" << std::endl;
         }
         std::this_thread::sleep_for(std::chrono::nanoseconds(100));

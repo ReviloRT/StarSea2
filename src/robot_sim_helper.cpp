@@ -22,6 +22,9 @@ void SoftwareSerial::print(int val) {
 void SoftwareSerial::print(double val) {
     std::cout << val;
 }
+void SoftwareSerial::print(double val, int ignore) {
+    std::cout << val;
+}
 
 Servo::Servo() {}
 void Servo::attach(int new_pin) {

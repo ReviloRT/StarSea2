@@ -29,7 +29,7 @@ int main( int argc, char* args[] )
     solver.set_state(inital_state);
     
     Arena &arena = *sim_robot.get_arena();
-    arena.add_wall(2000,1000,1000,-1000);
+    arena.add_wall(1000,1000,1000,-1000);
     arena.add_wall(1000,1000,-1000,1000);
     arena.add_wall(-1000,-1000,1000,-1000);
     arena.add_wall(-1000,-1000,-1000,1000);

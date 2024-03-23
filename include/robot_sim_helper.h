@@ -10,6 +10,7 @@
 #define OUTPUT 0
 #define HIGH 1
 #define LOW 0
+#define DEC 10
 
 #define A0 0
 #define A1 1
@@ -59,13 +60,13 @@ struct PhysicalModel {
     double irS0rot = 0;
     double irS1x = 0;
     double irS1y = 0;
-    double irS1rot = 0;
-    double irL0x = 0;
-    double irL0y = 0;
-    double irL0rot = 0;
-    double irL1x = 0;
-    double irL1y = 0;
-    double irL1rot = 0;
+    double irS1rot = PI;
+    double irL0x = 10;
+    double irL0y = 10;
+    double irL0rot = PI/2;
+    double irL1x = -10;
+    double irL1y = 10;
+    double irL1rot = PI/2;
 };
 
 struct CodeState {
@@ -89,6 +90,8 @@ struct CodeState {
     double m_FR_power = 0;
     double m_RL_power = 0;
     double m_RR_power = 0;
+    double ul_response_1 = 0;
+    double ul_response_2 = 0;
 
 };
 
@@ -101,6 +104,8 @@ public:
     void print(std::string val);
     void print(int val);
     void print(double val);
+    void print(double val, int ignore);
+
 };
 
 struct Servo {
