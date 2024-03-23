@@ -5,6 +5,7 @@
 
 #include "ss_parameters.h"
 #include "solver.h"
+#include "robot_sim.h"
 
 
 uint64_t last_time = SDL_GetTicks64();
@@ -18,21 +19,20 @@ int main( int argc, char* args[] )
     SDL_Window* window = SDL_CreateWindow( WINDOW_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     SDL_Renderer* sdl_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    IntegratorSolver<Euler<RobotState>,RobotState> solver;
+    IntegratorSolver<Euler<RobotKinematics>,RobotKinematics> solver;
     solver.set_interactions(false);
     solver.set_end(100);
     solver.set_dt(1.0/FRAME_RATE);
     solver.set_substeps(1);
     solver.set_t0(0);
 
-    RobotState inital_state;
+    RobotKinematics inital_state;
     solver.set_state(inital_state);
     
-    Arena &arena = *sim_robot.get_arena();
-    arena.add_wall(1000,1000,1000,-1000);
-    arena.add_wall(1000,1000,-1000,1000);
-    arena.add_wall(-1000,-1000,1000,-1000);
-    arena.add_wall(-1000,-1000,-1000,1000);
+    sim_robot.arena.add_wall(1000,1000,1000,-1000);
+    sim_robot.arena.add_wall(1000,1000,-1000,1000);
+    sim_robot.arena.add_wall(-1000,-1000,1000,-1000);
+    sim_robot.arena.add_wall(-1000,-1000,-1000,1000);
 
     sim_robot.init();
 

@@ -14,6 +14,6 @@ double length_to_px(double coordx);
 double length_to_py(double coordy);
 void drawRect(SDL_Renderer* sdlr, double cx, double cy, double wid, double len, double theta, double scale);
 void print(std::string str);
-uint64_t get_cycles();
+double map_range(double value, double low_in, double high_in, double low_out, double high_out);
 
 #endif // STARSEA_UTILS_H

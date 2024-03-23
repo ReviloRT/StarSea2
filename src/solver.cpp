@@ -253,10 +253,10 @@ solve_step() {
 
 template class Solver<GravityPoints>;
 template class Solver<Orbit>;
-template class Solver<RobotState>;
+template class Solver<RobotKinematics>;
 
 // template class StepSolver<Orbit>;
-// template class StepSolver<RobotState>;
+// template class StepSolver<RobotKinematics>;
 
 template class IntegratorSolver<IntegratorBase<State>,State>;
 template class IntegratorSolver<Euler<State>,State>;
@@ -270,8 +270,8 @@ template class IntegratorSolver<Euler2ndOrder<GravityPoints>,GravityPoints>;
 template class IntegratorSolver<RK4<GravityPoints>,GravityPoints>;
 template class IntegratorSolver<RKN4<GravityPoints>,GravityPoints>;
 
-template class IntegratorSolver<IntegratorBase<RobotState>,RobotState>;
-template class IntegratorSolver<Euler<RobotState>,RobotState>;
-template class IntegratorSolver<Euler2ndOrder<RobotState>,RobotState>;
-template class IntegratorSolver<RK4<RobotState>,RobotState>;
-template class IntegratorSolver<RKN4<RobotState>,RobotState>;
+template class IntegratorSolver<IntegratorBase<RobotKinematics>,RobotKinematics>;
+template class IntegratorSolver<Euler<RobotKinematics>,RobotKinematics>;
+template class IntegratorSolver<Euler2ndOrder<RobotKinematics>,RobotKinematics>;
+template class IntegratorSolver<RK4<RobotKinematics>,RobotKinematics>;
+template class IntegratorSolver<RKN4<RobotKinematics>,RobotKinematics>;

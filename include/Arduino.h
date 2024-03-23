@@ -1,6 +1,6 @@
 #ifndef ARDUINO_FAKE_H
 #define ARDUINO_FAKE_H
 
-#include "state_robot.h"
+#include "robot_sim_exposed.h"
 
 #endif // ARDUINO_FAKE_H

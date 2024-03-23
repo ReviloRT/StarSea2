@@ -35,3 +35,7 @@ void drawRect(SDL_Renderer* sdlr, double cx, double cy, double wid, double len, 
     corners[4] = {coord_to_px((cx + l1x)*scale), coord_to_py((cy + l1y)*scale)};
     SDL_RenderDrawLinesF(sdlr,corners,5);
 }
+
+double map_range(double value, double low_in, double high_in, double low_out, double high_out) {
+    return (value - low_in) * (high_out - low_out)/(high_in - low_in) + low_out;
+}

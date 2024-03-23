@@ -9,5 +9,7 @@
 #define FRAME_RATE 30
 #define PI 3.1415926535
 
+#define RENDER_SCALE 0.006
+
 
 #endif // STARSEA_PARAMETERS_H

@@ -5,7 +5,7 @@
 #include "state.h"
 #include "state_gravN.h"
 #include "state_orbit.h"
-#include "state_robot.h"
+#include "robot_sim_kinematics.h"
 #include "integrator.h"
 #include <algorithm>
 #include <array>

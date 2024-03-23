@@ -16,9 +16,13 @@ sources = ['src/starsea2.cpp',
            'src/state.cpp',
            'src/state_gravN.cpp',
            'src/state_orbit.cpp',
-           'src/state_robot.cpp',
+           'src/helper.cpp',
+           'src/robot_sim.cpp',
            'src/robot_sim_helper.cpp',
-           'src/helper.cpp'
+           'src/robot_sim_physics.cpp',
+           'src/robot_sim_arena.cpp',
+           'src/robot_sim_kinematics.cpp',
+           'src/robot_sim_exposed.cpp',
            ]
 
 robot_sources = [
@@ -34,7 +38,9 @@ robot_sources = [
            'submodules/706Project1/src/sensors.cpp',
            'submodules/706Project1/src/ultrasonic.cpp',
            'submodules/706Project1/src/utils.cpp',
-           'submodules/706Project1/src/karman.cpp'
+           'submodules/706Project1/src/karman.cpp',
+           'submodules/706Project1/src/robotController.cpp',
+           'submodules/706Project1/src/localisation.cpp',
            ]
 
 

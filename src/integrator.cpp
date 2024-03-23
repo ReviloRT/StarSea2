@@ -116,9 +116,9 @@ template class Euler2ndOrder<Orbit>;
 template class RK4<Orbit>;
 template class RKN4<Orbit>;
 
-template class IntegratorBase<RobotState>;
-template class NoIntegration<RobotState>;
-template class Euler<RobotState>;
-template class Euler2ndOrder<RobotState>;
-template class RK4<RobotState>;
-template class RKN4<RobotState>;
+template class IntegratorBase<RobotKinematics>;
+template class NoIntegration<RobotKinematics>;
+template class Euler<RobotKinematics>;
+template class Euler2ndOrder<RobotKinematics>;
+template class RK4<RobotKinematics>;
+template class RKN4<RobotKinematics>;

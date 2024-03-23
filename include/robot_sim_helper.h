@@ -1,10 +1,7 @@
-#ifndef ROBOT_SIM_HELPERS
-#define ROBOT_SIM_HELPERS
+#ifndef ROBOT_SIM_H
+#define ROBOT_SIM_H
 
 #include "ss_parameters.h"
-
-#include <string>
-#include <iostream>
 
 #define INPUT 1
 #define OUTPUT 0
@@ -28,7 +25,11 @@
 
 #define ROBOT_RENDER_SCALE 0.0006
 
-// #define String std::string
+#include <string>
+#include <iostream>
+
+extern void pwmWrite(int pin, int micros);
+
 class String : public std::string {
 public:
     String(double);
@@ -36,40 +37,31 @@ public:
     String(std::basic_string<char>);
     String operator+(const char []);
     String operator+(std::basic_string<char>);
-    
 };
 
-struct Wall {
-    double x1;
-    double y1;
-    double x2;
-    double y2;
+struct SoftwareSerial {
+private:
+public:
+    SoftwareSerial();
+    SoftwareSerial(int pin_tx, int pin_rx);
+    void begin(int baud_rate);
+    void print(std::string val);
+    void print(int val);
+    void print(double val);
+    void print(double val, int ignore);
+
 };
 
-struct PhysicalModel {
-    double width = 100;
-    double length = 100;
-    double wheelf = 8;
-    double wheels = 8;
-
-    double ulx = 0;
-    double uly = 0;
-    double ulrot = 0;
-    double irS0x = 0;
-    double irS0y = 0;
-    double irS0rot = 0;
-    double irS1x = 0;
-    double irS1y = 0;
-    double irS1rot = PI;
-    double irL0x = 10;
-    double irL0y = 10;
-    double irL0rot = PI/2;
-    double irL1x = -10;
-    double irL1y = 10;
-    double irL1rot = PI/2;
+struct Servo {
+private:
+    int pin = -1;
+public:
+    Servo();
+    void attach(int pin);
+    void writeMicroseconds(int micros);
 };
 
-struct CodeState {
+struct RobotCodeState {
     bool led_pindir = OUTPUT;
     bool gyro_pindir = OUTPUT;
     bool irs_0_pindir = OUTPUT;
@@ -95,28 +87,4 @@ struct CodeState {
 
 };
 
-struct SoftwareSerial {
-private:
-public:
-    SoftwareSerial();
-    SoftwareSerial(int pin_tx, int pin_rx);
-    void begin(int baud_rate);
-    void print(std::string val);
-    void print(int val);
-    void print(double val);
-    void print(double val, int ignore);
-
-};
-
-struct Servo {
-private:
-    int pin = -1;
-public:
-    Servo();
-    void attach(int pin);
-    void writeMicroseconds(int micros);
-};
-
-#include "state_robot.h"
-
-#endif // ROBOT_SIM_HELPERS
+#endif // ROBOT_SIM_H
