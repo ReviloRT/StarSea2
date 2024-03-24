@@ -53,7 +53,6 @@ double Arena::get_distance(double x, double y, double rot) const {
     
 }
 void Arena::render(SDL_Renderer* sdlr) const {
-    SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
     for (size_t i = 0; i < this->walls.size(); i++) {
         const Wall &w = walls[i];
         int px1 = coord_to_px(w.x1*RENDER_SCALE);
@@ -64,7 +63,6 @@ void Arena::render(SDL_Renderer* sdlr) const {
         // std::cout << "Arena: double (" << w.x1 << " , " << w.y1 << "), (" << w.x2 << " , " << w.y2 << ")" << "                 " <<std::endl;
         // std::cout << "Arena: px     (" << px1 << " , " << py1 << "), (" << px2 << " , " << py2 << ")" << "                 " <<std::endl;
     }
-    SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);
 }
 
 
