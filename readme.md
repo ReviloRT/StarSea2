@@ -1,5 +1,11 @@
 
 ## Setup:
+1. Ensure you have meson installed: pip3 install meson
+2. Ensure you are in the root directory (ie ../Starsea2/)
+3. Run the following commands
+    meson setup build && cd build           (note: this will not complete)
+
+meson init -C build --build
 
 ## Compile:
 cd build

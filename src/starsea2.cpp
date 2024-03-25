@@ -1,6 +1,5 @@
 #include <iostream>
 #include "SDL.h"
-#include "SDL_image.h"
 #include <chrono>
 #include <time.h>
 
@@ -79,7 +78,6 @@ int main( int argc, char* args[] )
 
     SDL_DestroyRenderer(sdl_renderer);
     SDL_DestroyWindow(window);
-    IMG_Quit();
     SDL_Quit();
 
     return 0;
