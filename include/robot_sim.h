@@ -21,13 +21,14 @@ private:
     double target_time = 0;
     std::mutex thread_lock;
     std::thread robot_code_thread;
-
+    
 public:
 
     Arena arena;
     RobotModel model;
     RobotCodeState code;
     RobotKinematics *robot_pos;
+    std::vector<Line> render_measurements;
 
 public:
 
@@ -47,7 +48,7 @@ public:
     void wait_to_sync();
 
     void change_robot_state(RobotKinematics *ptr);
-    void render(SDL_Renderer* sdlr) const;
+    void render(SDL_Renderer* sdlr);
     void lock();
     void unlock();
 };

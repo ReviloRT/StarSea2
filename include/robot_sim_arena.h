@@ -7,7 +7,7 @@
 #include <vector>
 #include <SDL.h>
 
-struct Wall {
+struct Line {
     double x1;
     double y1;
     double x2;
@@ -17,11 +17,12 @@ struct Wall {
 
 class Arena {
 public:
-    std::vector<Wall> walls;
+    std::vector<Line> walls;
 public:
-    void add_wall(Wall wall);
-    void add_wall(double x1, double y1, double x2, double y2);
-    double get_distance(double x, double y, double rot) const;
+    void add_line(Line wall);
+    void add_line(double x1, double y1, double x2, double y2);
+    double get_distance(double pos[3]) const;
+    double get_intersect(double pos[3], double intersect[2]) const;
     void render(SDL_Renderer* sdlr) const;
 };
 

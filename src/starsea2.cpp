@@ -12,7 +12,6 @@ uint64_t last_time = SDL_GetTicks64();
 int last_report = -1;
 double manage_framerate();
 
-
 int main( int argc, char* args[] )
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -22,17 +21,18 @@ int main( int argc, char* args[] )
     IntegratorSolver<Euler<RobotKinematics>,RobotKinematics> solver;
     solver.set_interactions(false);
     solver.set_end(100);
-    solver.set_dt(1.0/FRAME_RATE);
+    solver.set_dt(1.0/FRAME_RATE*ROBOT_SIM_RATE);
     solver.set_substeps(1);
     solver.set_t0(0);
 
-    RobotKinematics inital_state;
+    std::vector<double> pos = {0,0,0};
+    RobotKinematics inital_state(pos);
     solver.set_state(inital_state);
     
-    sim_robot.arena.add_wall(1000,1000,1000,-1000);
-    sim_robot.arena.add_wall(1000,1000,-1000,1000);
-    sim_robot.arena.add_wall(-1000,-1000,1000,-1000);
-    sim_robot.arena.add_wall(-1000,-1000,-1000,1000);
+    sim_robot.arena.add_line(1000,500,1000,-500);
+    sim_robot.arena.add_line(1000,500,-1000,500);
+    sim_robot.arena.add_line(-1000,-500,1000,-500);
+    sim_robot.arena.add_line(-1000,-500,-1000,500);
 
     sim_robot.init();
 
@@ -48,7 +48,7 @@ int main( int argc, char* args[] )
         SDL_RenderClear(sdl_renderer);
 
         // std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
-        solver.solve_step();
+        solver.solve_step_inplace();
         // std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         solver.render(sdl_renderer);
         // std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -59,7 +59,7 @@ int main( int argc, char* args[] )
         double fps = manage_framerate();
 
         if (solver.get_time() >= last_report + 1 ){
-            std::cout << "*** Time: " << solver.get_time()  << " FPS: " << fps << " ***" <<RETURN_CARRAIGE;
+            std::cout << "*** Time: " << solver.get_time()  << " FPS: " << fps << " ***" << RETURN_CARRAIGE;
             last_report = (int)solver.get_time();
         }
 

@@ -71,9 +71,12 @@ public:
     void set_interactions(bool interactions);
 
     void solve_step();
-
+    void solve_step_inplace();
+    
     void solve_dynamics();
     void solve_interactions();
+    void solve_dynamics_inplace();
+    void solve_interactions_inplace();
     void render(SDL_Renderer* sdlr);
     void complete_step();
 

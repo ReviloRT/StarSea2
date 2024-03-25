@@ -251,6 +251,51 @@ solve_step() {
 
 
 
+template<class T_integrator,class T_state> 
+void IntegratorSolver<T_integrator,T_state>::
+solve_dynamics_inplace() {
+    T_state &state = calc_states[curr_idxs[0]];
+
+    if ((this->_end > 0) && (this->_time >= this->_end)) return;
+
+    double dt_remaining = this->_step_dt;
+    while (dt_remaining >= DBL_MIN) {
+
+        state.write_lock();
+
+        double dt = integrator.solve(state, state, this->_time);
+
+        state.write_unlock();
+
+        this->_time += dt;
+        dt_remaining -= dt;
+    }
+}
+
+template<class T_integrator,class T_state> 
+void IntegratorSolver<T_integrator,T_state>::
+solve_interactions_inplace() {
+
+    if (include_interactions == true) {
+        T_state &state = calc_states[curr_idxs[0]];
+
+        state.write_lock();
+        state.solve_interactions(state);
+        state.write_unlock();
+    }
+
+    
+}
+
+template<class T_integrator,class T_state> 
+void IntegratorSolver<T_integrator,T_state>::
+solve_step_inplace() {
+    solve_dynamics_inplace();
+    solve_interactions_inplace();
+}
+
+
+
 template class Solver<GravityPoints>;
 template class Solver<Orbit>;
 template class Solver<RobotKinematics>;

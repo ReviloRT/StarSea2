@@ -6,10 +6,11 @@
 
 #define SCREEN_WIDTH   1280
 #define SCREEN_HEIGHT  720
-#define FRAME_RATE 30
+#define FRAME_RATE 100
 #define PI 3.1415926535
 
-#define RENDER_SCALE 0.0005
+#define RENDER_SCALE 0.001
+#define ROBOT_SIM_RATE 1
 
 
 #endif // STARSEA_PARAMETERS_H

@@ -31,7 +31,7 @@ void delay(int millis) {
     sim_robot.lock();
     sim_robot.add_time(((double)millis)/1000.0);
     sim_robot.unlock();
-    _sleep(millis);
+    _sleep(millis/ROBOT_SIM_RATE);
 }
 void delayMicroseconds(int micros) {
     sim_robot.wait_to_sync();
@@ -140,6 +140,8 @@ void pwmWrite(int pin, int micros) {
         break;
     }
     sim_robot.unlock();
+    sim_robot.add_time(1/1000.0/1000.0);
+
 }
 uint16_t analogRead(int pin) {
     sim_robot.wait_to_sync();
@@ -168,6 +170,7 @@ uint16_t analogRead(int pin) {
         break;
     }
     sim_robot.unlock();
+    sim_robot.add_time(5/1000.0/1000.0);
     return ret;
 }
 bool digitalRead(int pin) {

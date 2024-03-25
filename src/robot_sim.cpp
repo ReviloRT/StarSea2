@@ -16,10 +16,11 @@ double RobotSim::ultrasonic_pulse() {
     double pos[3];
     robot_pos->get_position(pos);
     
-    double ul_x = pos[0] + cos(pos[2]) * model.ulx - sin(pos[2]) * model.uly;  
-    double ul_y = pos[1] - sin(pos[2]) * model.uly + cos(pos[2]) * model.ulx;  
-    double ul_rot = pos[2] + model.ulrot;
-    double dist = arena.get_distance(ul_x,ul_y,ul_rot);
+    double ul_pos[3];
+    ul_pos[0] = pos[0] + cos(pos[2]) * model.ulx - sin(pos[2]) * model.uly;  
+    ul_pos[1] = pos[1] + sin(pos[2]) * model.ulx + cos(pos[2]) * model.uly;  
+    ul_pos[2] = pos[2] + model.ulrot;
+    double dist = RobotPhysics::pos_to_ultra_dist(ul_pos);
     // std::cout << " Ultrasonic Pulse: " << dist << std::endl;
     
     double pulse_time = dist*5.80/1000.0/1000.0;
@@ -50,6 +51,7 @@ double RobotSim::get_infrared(int pin) {
     robot_pos->get_position(pos);
 
     double model_ir_x, model_ir_y, model_ir_rot, scale, exponent;
+    bool is_long = false;
     switch (pin) {
     case IR_SHORT_PIN_0:
         if (code.irs_0_pindir == OUTPUT) return 0;
@@ -74,6 +76,7 @@ double RobotSim::get_infrared(int pin) {
         model_ir_rot = model.irL0rot;
         scale = IR_LONG_SCALE_DATASHEET;
         exponent = IR_LONG_EXPONENT_DATASHEET;
+        is_long = true;
         break;
     case IR_LONG_PIN_1:
         if (code.irl_1_pindir == OUTPUT) return 0;
@@ -82,6 +85,7 @@ double RobotSim::get_infrared(int pin) {
         model_ir_rot = model.irL1rot;
         scale = IR_LONG_SCALE_DATASHEET;
         exponent = IR_LONG_EXPONENT_DATASHEET;
+        is_long = true;
         break;
     default:
         model_ir_x = 0;
@@ -92,20 +96,25 @@ double RobotSim::get_infrared(int pin) {
         break;
     }
     
-    double ir_x = pos[0] + cos(pos[2]) * model_ir_x - sin(pos[2]) * model_ir_y;  
-    double ir_y = pos[1] - sin(pos[2]) * model_ir_y + cos(pos[2]) * model_ir_x;  
-    double ir_rot = pos[2] + model_ir_rot;
-    double dist = arena.get_distance(ir_x,ir_y,ir_rot);
+    double ir_pos[3];
+    ir_pos[0] = pos[0] + cos(pos[2]) * model_ir_x - sin(pos[2]) * model_ir_y;  
+    ir_pos[1] = pos[1] + sin(pos[2]) * model_ir_x + cos(pos[2]) * model_ir_y;  
+    ir_pos[2] = pos[2] + model_ir_rot;
+    
+    double dist;
+    if (is_long) dist = RobotPhysics::pos_to_long_ir_dist(ir_pos);
+    else dist = RobotPhysics::pos_to_short_ir_dist(ir_pos);
+
     double measured = pow(dist/scale,1/exponent);
     // std::cout << "Infrared " << dist << ", " << measured << std::endl;
 
     return measured;
 }
 double RobotSim::get_gyro() {
-    double pos[3];
-    robot_pos->get_position(pos);
+    double vel[3];
+    robot_pos->get_velocity(vel);
     if (code.gyro_pindir == OUTPUT) return 0;
-    return map_range(pos[2],-250,250,1023*0.5/5.0,1023.0*4.5/5.0);
+    return map_range(vel[2],-250.0/180.0*PI,250.0/180.0*PI,1023*0.8/5.0,1023.0*4.2/5.0);
 }
 double RobotSim::get_battery() {
     if (code.bat_pindir == OUTPUT) return 0;
@@ -140,7 +149,7 @@ void RobotSim::wait_to_sync() {
         t1 = get_target_time();
         t2 = get_time();
         unlock();
-        _sleep(10);
+        _sleep(1);
     }
 }
 
@@ -148,8 +157,17 @@ void RobotSim::change_robot_state(RobotKinematics *ptr) {
     robot_pos = ptr;
 }
 
-void RobotSim::render(SDL_Renderer* sdlr) const {
+void RobotSim::render(SDL_Renderer* sdlr) {
     arena.render(sdlr);
+    // std::cout << "Render robot " << render_measurements.size() << std::endl;
+    for (Line line : render_measurements) {
+        int px1 = coord_to_px(line.x1*RENDER_SCALE);
+        int py1 = coord_to_py(line.y1*RENDER_SCALE);
+        int px2 = coord_to_px(line.x2*RENDER_SCALE);
+        int py2 = coord_to_py(line.y2*RENDER_SCALE);
+        SDL_RenderDrawLine(sdlr,px1,py1,px2,py2);
+    }
+    render_measurements.clear();
 }
 void RobotSim::lock(){
     thread_lock.lock();
