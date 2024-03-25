@@ -166,7 +166,8 @@ void RobotSim::render(SDL_Renderer* sdlr) {
         int px2 = coord_to_px(line.x2*RENDER_SCALE);
         int py2 = coord_to_py(line.y2*RENDER_SCALE);
         SDL_RenderDrawLine(sdlr,px1,py1,px2,py2);
-    }
+    } 
+    SDL_RenderDrawLinesF(sdlr,path.data(),path.size());
     render_measurements.clear();
 }
 void RobotSim::lock(){

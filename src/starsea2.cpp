@@ -2,6 +2,7 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include <chrono>
+#include <time.h>
 
 #include "ss_parameters.h"
 #include "solver.h"
@@ -18,22 +19,36 @@ int main( int argc, char* args[] )
     SDL_Window* window = SDL_CreateWindow( WINDOW_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     SDL_Renderer* sdl_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
+    // Set up integrator
     IntegratorSolver<Euler<RobotKinematics>,RobotKinematics> solver;
     solver.set_interactions(false);
     solver.set_end(100);
     solver.set_dt(1.0/FRAME_RATE*ROBOT_SIM_RATE);
     solver.set_substeps(1);
     solver.set_t0(0);
+    
+    // Random start position (uncomment for random start)
+    // srand(time(0));
+    // srand(0);
+    // double x_init = rand() % 1500 - 750;
+    // double y_init = rand() % 750 - 375;
+    // double r_init = ((double)(rand() % 1000))/1000.0 * 2*PI;
+    // std::cout << x_init << ", " << y_init << ", " << r_init << std::endl;
+    // _sleep(1000);
+    // std::vector<double> pos = { x_init, y_init, r_init}; 
 
-    std::vector<double> pos = {0,0,0};
+    // *POI*
+    std::vector<double> pos = { 0, 0, 0}; // Hardcoded Start position 
     RobotKinematics inital_state(pos);
     solver.set_state(inital_state);
     
+    // Generate Arena walls
     sim_robot.arena.add_line(1000,500,1000,-500);
     sim_robot.arena.add_line(1000,500,-1000,500);
     sim_robot.arena.add_line(-1000,-500,1000,-500);
     sim_robot.arena.add_line(-1000,-500,-1000,500);
 
+    // Start thread
     sim_robot.init();
 
 
@@ -44,20 +59,16 @@ int main( int argc, char* args[] )
                 break;
             }
         }
-
         SDL_RenderClear(sdl_renderer);
 
-        // std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
+        // Solve
         solver.solve_step_inplace();
-        // std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+
+        // Render
         solver.render(sdl_renderer);
-        // std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
-        // std::cout << "Time difference 1 = " << std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() << "us" << std::endl;
-        // std::cout << "Time difference 2 = " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << "us" << std::endl;
-
+        // Handle framerate
         double fps = manage_framerate();
-
         if (solver.get_time() >= last_report + 1 ){
             std::cout << "*** Time: " << solver.get_time()  << " FPS: " << fps << " ***" << RETURN_CARRAIGE;
             last_report = (int)solver.get_time();

@@ -56,8 +56,8 @@ double Orbit::solve_next_state(Orbit &output, double dt) const {
     output = *this;
     for (size_t i = 0; i < objects.size(); i++) {
         OrbitalElements const &o = objects[i];
-        double period = 2 * M_PI * sqrt(o.semimajor_axis*o.semimajor_axis*o.semimajor_axis / gravitational_param) / (24*60*60);
-        double mean_anomaly = o.mean_anomaly + 2 * M_PI * (dt / period);
+        double period = 2 * PI * sqrt(o.semimajor_axis*o.semimajor_axis*o.semimajor_axis / gravitational_param) / (24*60*60);
+        double mean_anomaly = o.mean_anomaly + 2 * PI * (dt / period);
         double theta = kepler(o.eccentricity, mean_anomaly, tolerance);
         double radius = o.semimajor_axis * (1 - o.eccentricity * o.eccentricity) / (1 + o.eccentricity * cos(theta));
         

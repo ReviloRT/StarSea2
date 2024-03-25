@@ -23,7 +23,6 @@
 
 #define LED_BUILTIN 11
 
-#define ROBOT_RENDER_SCALE 0.0006
 
 #include <string>
 #include <iostream>

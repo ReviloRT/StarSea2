@@ -9,8 +9,9 @@
 #define FRAME_RATE 100
 #define PI 3.1415926535
 
+
 #define RENDER_SCALE 0.001
-#define ROBOT_SIM_RATE 1
+#define ROBOT_SIM_RATE 1 // *POI* (make it run faster or slower, too fast breaks it)
 
 
 #endif // STARSEA_PARAMETERS_H

@@ -29,6 +29,7 @@ public:
     RobotCodeState code;
     RobotKinematics *robot_pos;
     std::vector<Line> render_measurements;
+    std::vector<SDL_FPoint> path;
 
 public:
 

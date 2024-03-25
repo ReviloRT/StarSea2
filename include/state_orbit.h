@@ -4,7 +4,7 @@
 #include "state.h"
 #include <math.h> 
 
-# define M_PI 3.141592653589793238462643383279502884L
+# define PI 3.141592653589793238462643383279502884L
 
 struct OrbitalElements {
     double semimajor_axis = 0;
@@ -27,11 +27,11 @@ struct OrbitalElements {
     bool solved = false;
 
     void convertDegToRad() {
-        inclination = inclination / 180.0 * M_PI;
-        longitude_accend = longitude_accend / 180.0 * M_PI;
-        argument_periap = argument_periap / 180.0 * M_PI;
-        true_anomaly = true_anomaly / 180.0 * M_PI;
-        mean_anomaly = mean_anomaly / 180.0 * M_PI;
+        inclination = inclination / 180.0 * PI;
+        longitude_accend = longitude_accend / 180.0 * PI;
+        argument_periap = argument_periap / 180.0 * PI;
+        true_anomaly = true_anomaly / 180.0 * PI;
+        mean_anomaly = mean_anomaly / 180.0 * PI;
     }
 };
 

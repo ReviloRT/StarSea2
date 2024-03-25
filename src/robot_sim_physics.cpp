@@ -51,12 +51,12 @@ void RobotPhysics::robot_to_global(double const robot[3], double global[3], doub
 }
 
 void RobotPhysics::global_to_robot(double robot[3], double const global[3], double const robot_in_global[3]) {
-    robot[0] = global[0] * cos(robot_in_global[2]) - global[1] * sin(robot_in_global[2]);
-    robot[1] = global[0] * sin(robot_in_global[2]) + global[1] * cos(robot_in_global[2]);
+    robot[0] =   global[0] * cos(robot_in_global[2]) + global[1] * sin(robot_in_global[2]);
+    robot[1] = - global[0] * sin(robot_in_global[2]) + global[1] * cos(robot_in_global[2]);
     robot[2] = global[2];
 }   
 
-void RobotPhysics::motors_to_global_velocities(std::vector<double> &global_vels_vect, std::vector<double> &global_pos_vect) {
+void RobotPhysics::motors_to_global_velocities(std::vector<double> &global_vels_vect, std::vector<double> const &global_pos_vect) {
     double motor_powers[4] = {sim_robot.code.m_FL_power,  sim_robot.code.m_FR_power, sim_robot.code.m_RL_power, sim_robot.code.m_RR_power};
     double ang_vels[4], robot_vels[3], global_vels[3];
     motors_to_ang_vels(motor_powers,ang_vels);
@@ -66,7 +66,7 @@ void RobotPhysics::motors_to_global_velocities(std::vector<double> &global_vels_
 }
 
 
-void RobotPhysics::motors_to_global_accelerations(std::vector<double> &global_accels_vect, std::vector<double> &global_vels_vect, std::vector<double> &global_pos_vect) {
+void RobotPhysics::motors_to_global_accelerations(std::vector<double> &global_accels_vect, std::vector<double> const &global_vels_vect, std::vector<double> const &global_pos_vect) {
     double motor_powers[4] = {sim_robot.code.m_FL_power,  sim_robot.code.m_FR_power, sim_robot.code.m_RL_power, sim_robot.code.m_RR_power};
     double ang_accels[4], ang_vels[4], robot_accels[3], robot_vels[3], global_accels[3];
     global_to_robot(robot_vels, global_vels_vect.data(), global_pos_vect.data());
@@ -88,12 +88,15 @@ double RobotPhysics::line_length(Line line) {
     return sqrt(dx*dx + dy*dy);
 }
 
-double RobotPhysics::pos_to_rand_dist(double pos[3], double rand_theta, double rand_xy) {
+double RobotPhysics::pos_to_rand_dist(double pos[3], double rand_theta, double rand_xy, double min_val, double max_val) {
     double intersect[2] = {0,0};
-    double pos_rand_theta[3] = {pos[0], pos[1], pos[2]+rand_gaussian(rand_theta)};
-    double dist = sim_robot.arena.get_intersect(pos,intersect);
-    intersect[0] += rand_gaussian(rand_xy);
-    intersect[1] += rand_gaussian(rand_xy);
+    double pos_rand_theta[3] = {pos[0], pos[1], pos[2]+rand_gaussian(1)*rand_theta};
+    double dist = sim_robot.arena.get_intersect(pos_rand_theta,intersect);
+    double clamp_scaling =  (dist > max_val ? max_val/dist : 1) * (dist < min_val ? min_val/dist : 1);
+    intersect[0] = pos[0] + (intersect[0] - pos[0]) * clamp_scaling;
+    intersect[1] = pos[1] + (intersect[1] - pos[1]) * clamp_scaling;
+    intersect[0] += rand_gaussian(rand_xy) * dist / max_val;
+    intersect[1] += rand_gaussian(rand_xy) * dist / max_val;
     Line line = {pos[0],pos[1], intersect[0], intersect[1]};
     sim_robot.render_measurements.push_back(line);
     return line_length(line);
@@ -101,13 +104,13 @@ double RobotPhysics::pos_to_rand_dist(double pos[3], double rand_theta, double r
 
 
 double RobotPhysics::pos_to_short_ir_dist(double pos[3]) {
-    return pos_to_rand_dist(pos, sim_robot.model.short_ir_rand_theta, sim_robot.model.short_ir_rand_xy);
+    return pos_to_rand_dist(pos, sim_robot.model.short_ir_rand_theta, sim_robot.model.short_ir_rand_xy, sim_robot.model.short_ir_min, sim_robot.model.short_ir_max);
 }
 
 double RobotPhysics::pos_to_long_ir_dist(double pos[3]) {
-    return pos_to_rand_dist(pos, sim_robot.model.long_ir_rand_theta, sim_robot.model.long_ir_rand_xy);
+    return pos_to_rand_dist(pos, sim_robot.model.long_ir_rand_theta, sim_robot.model.long_ir_rand_xy, sim_robot.model.long_ir_min, sim_robot.model.long_ir_max);
 }
 
 double RobotPhysics::pos_to_ultra_dist(double pos[3]) {
-    return pos_to_rand_dist(pos, sim_robot.model.ultra_rand_theta, sim_robot.model.ultra_rand_xy);
+    return pos_to_rand_dist(pos, sim_robot.model.ultra_rand_theta, sim_robot.model.ultra_rand_xy, sim_robot.model.ultra_min, sim_robot.model.ultra_max);
 }

@@ -38,7 +38,7 @@ void RobotKinematics::solve_deltas(RobotKinematics &output, double target_time) 
     
     output.data_0 = output.data_1;
     RobotPhysics::motors_to_global_accelerations(output.data_1,data_1,data_0);
-    std::cout << "Solve_Deltas Pos: " << data_0[0] << ", " << data_0[1] << ", " << data_0[2] << std::endl;
+    // std::cout << "Solve_Deltas Pos: " << data_0[0] << ", " << data_0[1] << ", " << data_0[2] << std::endl;
     sim_robot.set_target_time(target_time);
     sim_robot.unlock();
 
@@ -47,6 +47,7 @@ void RobotKinematics::render(SDL_Renderer* sdlr) const {
     SDL_SetRenderDrawColor(sdlr, 255, 255, 255, 255);
     sim_robot.lock();
 
+    sim_robot.path.push_back(SDL_FPoint{(float)coord_to_px(data_0[0]*RENDER_SCALE),(float)coord_to_py(data_0[1]*RENDER_SCALE)});
     sim_robot.render(sdlr);
     drawRect(sdlr, data_0[0],data_0[1],sim_robot.model.width, sim_robot.model.length, data_0[2], RENDER_SCALE);
     // drawRect(sdlr, data_0[0]+model.irL0x,data_0[1]+model.irL0y,model.width/10, model.length/10, data_0[2]+model.irL0rot, ROBOT_RENDER_SCALE);

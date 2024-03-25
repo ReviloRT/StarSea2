@@ -6,7 +6,8 @@
 #include <vector>
 #include <random>
 
-
+// *POI*
+// Define robot physical model (all in mm and rad)
 struct RobotModel {
     double width = 190;
     double length = 160;
@@ -36,12 +37,20 @@ struct RobotModel {
     double motor_scale_RL = 1;
     double motor_scale_RR = 1;
 
-    double short_ir_rand_theta = 20;
-    double short_ir_rand_xy = 10;
-    double long_ir_rand_theta = 20;
-    double long_ir_rand_xy = 15;
-    double ultra_rand_theta = 25;
-    double ultra_rand_xy = 20;
+    double short_ir_rand_theta = PI/45.0;
+    double short_ir_rand_xy = 25;
+    double short_ir_min = 40;
+    double short_ir_max = 300;
+
+    double long_ir_rand_theta = PI/45.0;
+    double long_ir_rand_xy = 30;
+    double long_ir_min = 100;
+    double long_ir_max = 800;
+
+    double ultra_rand_theta = PI/35.0;
+    double ultra_rand_xy = 40;
+    double ultra_min = 20;
+    double ultra_max = 3000;
 };
 
 
@@ -56,12 +65,12 @@ void robot_to_angular(double angular[4], double const robot[3]);
 void robot_to_global(double const robot[3], double global[3], double const robot_in_global[3]);
 void global_to_robot(double robot[3], double const global[3], double const robot_in_global[3]);
 
-void motors_to_global_velocities(std::vector<double> &global_vels_vect, std::vector<double> &global_pos_vect);
-void motors_to_global_accelerations(std::vector<double> &global_accels_vect, std::vector<double> &global_vels_vect, std::vector<double> &global_pos_vect);
+void motors_to_global_velocities(std::vector<double> &global_vels_vect, std::vector<double> const &global_pos_vect);
+void motors_to_global_accelerations(std::vector<double> &global_accels_vect, std::vector<double> const &global_vels_vect, std::vector<double> const &global_pos_vect);
 
 double rand_gaussian(double std_dev);
 double line_length(Line line);
-double pos_to_rand_dist(double pos[3], double rand_theta, double rand_xy);
+double pos_to_rand_dist(double pos[3], double rand_theta, double rand_xy, double min_val, double max_val);
 
 double pos_to_short_ir_dist(double pos[3]);
 double pos_to_long_ir_dist(double pos[3]);
