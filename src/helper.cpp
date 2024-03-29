@@ -21,6 +21,13 @@ void print(std::string str) {
     std::cout << str << std::endl;
 }
 
+double rotate_point_x(double x, double y, double theta) {
+    return cos(theta)*x - sin(theta)*y;
+}
+double rotate_point_y(double x, double y, double theta) {
+    return sin(theta)*x + cos(theta)*y;
+}
+
 void drawRect(SDL_Renderer* sdlr, double cx, double cy, double wid, double len, double theta, double scale) {
     double l1x = wid/2.0*cos(theta) - len/2.0*sin(theta);
     double l1y = wid/2.0*sin(theta) + len/2.0*cos(theta);

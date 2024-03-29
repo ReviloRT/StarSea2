@@ -48,9 +48,7 @@ void RobotKinematics::render(SDL_Renderer* sdlr) const {
     sim_robot.lock();
 
     sim_robot.path.push_back(SDL_FPoint{(float)coord_to_px(data_0[0]*RENDER_SCALE),(float)coord_to_py(data_0[1]*RENDER_SCALE)});
-    sim_robot.render(sdlr);
-    drawRect(sdlr, data_0[0],data_0[1],sim_robot.model.width, sim_robot.model.length, data_0[2], RENDER_SCALE);
-    // drawRect(sdlr, data_0[0]+model.irL0x,data_0[1]+model.irL0y,model.width/10, model.length/10, data_0[2]+model.irL0rot, ROBOT_RENDER_SCALE);
+    sim_robot.render(sdlr,data_0);
 
     sim_robot.unlock();
     SDL_SetRenderDrawColor(sdlr, 0, 0, 0, 255);

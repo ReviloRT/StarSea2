@@ -7,23 +7,41 @@ std::random_device RobotPhysics::random_device;
 std::mt19937 RobotPhysics::random_generator{random_device()};
 std::normal_distribution<double> RobotPhysics::normal_dist{0.0,1.0};
 
+double RobotPhysics::dead_zone(double power) {
+    bool is_not_dead = abs(power) >= sim_robot.model.dead_zone_percent;
+    return power*is_not_dead;
+}
+
+double RobotPhysics::battery_charge(double power) {
+    return power * map_range(sim_robot.code.battery_percent,0,100,0.7,1.05);
+}
+
+double RobotPhysics::non_linearity(double power) {
+    // return power;
+    return 100/(1+exp(-0.07*(abs(power)-50)))*(power >=0 ? 1 : -1) * (abs(power) >= DBL_MIN*10);
+}
+
+double RobotPhysics::motor_adjustments(double power) {
+    return non_linearity(dead_zone(battery_charge(power)));
+}
+
 
 // Motor powers to motor speeds
 void RobotPhysics::motors_to_ang_vels(double const m_powers[4], double ang_vels[4]) {
     double k =  sim_robot.model.motor_max_rpm * 2.0 * PI / 100.0;
-    ang_vels[0] = m_powers[0] * sim_robot.model.motor_scale_FL * k;
-    ang_vels[1] = m_powers[1] * sim_robot.model.motor_scale_FR * k;
-    ang_vels[2] = m_powers[2] * sim_robot.model.motor_scale_RL * k;
-    ang_vels[3] = m_powers[3] * sim_robot.model.motor_scale_RR * k;
+    ang_vels[0] = motor_adjustments(m_powers[0]) * sim_robot.model.motor_scale_FL * k;
+    ang_vels[1] = motor_adjustments(m_powers[1]) * sim_robot.model.motor_scale_FR * k;
+    ang_vels[2] = motor_adjustments(m_powers[2]) * sim_robot.model.motor_scale_RL * k;
+    ang_vels[3] = motor_adjustments(m_powers[3]) * sim_robot.model.motor_scale_RR * k;
 }
 
 void RobotPhysics::motors_to_ang_accels(double const m_powers[4], double const ang_vels[4], double ang_accels[4]) {
     double k = sim_robot.model.motor_max_rpm * 2.0 * PI / 100.0;
     double inv_tau = 1.0 / sim_robot.model.motor_time_constant;
-    ang_accels[0] = ( m_powers[0] * sim_robot.model.motor_scale_FL * k - ang_vels[0]) * inv_tau;
-    ang_accels[1] = ( m_powers[1] * sim_robot.model.motor_scale_FR * k - ang_vels[1]) * inv_tau;
-    ang_accels[2] = ( m_powers[2] * sim_robot.model.motor_scale_RL * k - ang_vels[2]) * inv_tau;
-    ang_accels[3] = ( m_powers[3] * sim_robot.model.motor_scale_RR * k - ang_vels[3]) * inv_tau;
+    ang_accels[0] = ( motor_adjustments(m_powers[0]) * sim_robot.model.motor_scale_FL * k - ang_vels[0]) * inv_tau;
+    ang_accels[1] = ( motor_adjustments(m_powers[1]) * sim_robot.model.motor_scale_FR * k - ang_vels[1]) * inv_tau;
+    ang_accels[2] = ( motor_adjustments(m_powers[2]) * sim_robot.model.motor_scale_RL * k - ang_vels[2]) * inv_tau;
+    ang_accels[3] = ( motor_adjustments(m_powers[3]) * sim_robot.model.motor_scale_RR * k - ang_vels[3]) * inv_tau;
 }
 
 

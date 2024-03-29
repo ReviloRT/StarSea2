@@ -15,7 +15,7 @@ struct RobotModel {
     double wheel_width = 155;
     double wheel_rad = 25;
     double motor_max_rpm = 2;
-    double motor_time_constant = 0.2;
+    double motor_time_constant = 0.25;
 
     double ulx = 60;
     double uly = 0;
@@ -32,10 +32,12 @@ struct RobotModel {
     double irL1x = -60;
     double irL1y = 60;
     double irL1rot = PI/2;
-    double motor_scale_FL = 1;
-    double motor_scale_FR = 1;
-    double motor_scale_RL = 1;
-    double motor_scale_RR = 1;
+
+    double motor_scale_FL = 1.15;
+    double motor_scale_FR = 1.08;
+    double motor_scale_RL = 0.97;
+    double motor_scale_RR = 0.93;
+    double dead_zone_percent = 0.3;
 
     double short_ir_rand_theta = PI/45.0;
     double short_ir_rand_xy = 25;
@@ -55,6 +57,11 @@ struct RobotModel {
 
 
 namespace RobotPhysics {
+
+double dead_zone(double power);
+double battery_charge(double power);
+double non_linearity(double power);
+double motor_adjustments(double power);
 
 void motors_to_ang_vels(double const m_powers[4], double ang_vels[4]);
 void motors_to_ang_accels(double const m_powers[4], double const ang_vels[4], double ang_accels[4]);

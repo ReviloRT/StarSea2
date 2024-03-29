@@ -157,8 +157,26 @@ void RobotSim::change_robot_state(RobotKinematics *ptr) {
     robot_pos = ptr;
 }
 
-void RobotSim::render(SDL_Renderer* sdlr) {
+void RobotSim::render(SDL_Renderer* sdlr, std::vector<double> const &pos) {
     arena.render(sdlr);
+    
+    drawRect(sdlr, pos[0],pos[1],sim_robot.model.width, sim_robot.model.length, pos[2], RENDER_SCALE);
+    double new_x = rotate_point_x(model.irL0x,model.irL0y,pos[2]);
+    double new_y = rotate_point_y(model.irL0x,model.irL0y,pos[2]);
+    drawRect(sdlr, pos[0]+new_x,pos[1]+new_y,model.width/5, model.length/5, pos[2]+model.irL0rot, RENDER_SCALE);
+    new_x = rotate_point_x(model.irL1x,model.irL1y,pos[2]);
+    new_y = rotate_point_y(model.irL1x,model.irL1y,pos[2]);
+    drawRect(sdlr, pos[0]+new_x,pos[1]+new_y,model.width/5, model.length/5, pos[2]+model.irL1rot, RENDER_SCALE);
+    new_x = rotate_point_x(model.irS0x,model.irS0y,pos[2]);
+    new_y = rotate_point_y(model.irS0x,model.irS0y,pos[2]);
+    drawRect(sdlr, pos[0]+new_x,pos[1]+new_y,model.width/5, model.length/5, pos[2]+model.irS0rot, RENDER_SCALE);
+    new_x = rotate_point_x(model.irS1x,model.irS1y,pos[2]);
+    new_y = rotate_point_y(model.irS1x,model.irS1y,pos[2]);
+    drawRect(sdlr, pos[0]+new_x,pos[1]+new_y,model.width/5, model.length/5, pos[2]+model.irS1rot, RENDER_SCALE);
+    new_x = rotate_point_x(model.ulx,model.uly,pos[2]);
+    new_y = rotate_point_y(model.ulx,model.uly,pos[2]);
+    drawRect(sdlr, pos[0]+new_x,pos[1]+new_y,model.width/5, model.length/5, pos[2]+model.ulrot, RENDER_SCALE);
+
     // std::cout << "Render robot " << render_measurements.size() << std::endl;
     for (Line line : render_measurements) {
         int px1 = coord_to_px(line.x1*RENDER_SCALE);

@@ -49,7 +49,7 @@ public:
     void wait_to_sync();
 
     void change_robot_state(RobotKinematics *ptr);
-    void render(SDL_Renderer* sdlr);
+    void render(SDL_Renderer* sdlr,  std::vector<double> const &pos);
     void lock();
     void unlock();
 };

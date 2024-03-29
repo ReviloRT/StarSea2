@@ -5,7 +5,7 @@ project('starsea2', 'c', 'cpp',
 sdl2_dep = dependency('sdl2')
 sdl2_main_dep = dependency('sdl2main')
 
-inc = include_directories(['include',
+inc = include_directories(['include', 'include/emulate_includes',
                                'submodules/706Project1/include'
                               ])
 
