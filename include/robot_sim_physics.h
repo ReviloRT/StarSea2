@@ -30,7 +30,7 @@ struct RobotModel {
     double irL0y = 60;
     double irL0rot = PI/2;
     double irL1x = -60;
-    double irL1y = 60;
+    double irL1y = 45;
     double irL1rot = PI/2;
 
     double motor_scale_FL = -1.15;
