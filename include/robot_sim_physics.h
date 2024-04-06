@@ -33,9 +33,9 @@ struct RobotModel {
     double irL1y = 60;
     double irL1rot = PI/2;
 
-    double motor_scale_FL = 1.15;
+    double motor_scale_FL = -1.15;
     double motor_scale_FR = 1.08;
-    double motor_scale_RL = 0.97;
+    double motor_scale_RL = -0.97;
     double motor_scale_RR = 0.93;
     double dead_zone_percent = 0.3;
 
