@@ -13,12 +13,15 @@ double RobotPhysics::dead_zone(double power) {
 }
 
 double RobotPhysics::battery_charge(double power) {
-    return power * map_range(sim_robot.code.battery_percent,0,100,0.7,1.05);
+    return power * map_range(sim_robot.code.battery_percent,0,100,0.45,1.00);
 }
 
 double RobotPhysics::non_linearity(double power) {
-    // return power;
-    return 100/(1+exp(-0.07*(abs(power)-50)))*(power >=0 ? 1 : -1) * (abs(power) >= DBL_MIN*10);
+    return power;
+    // desmos = p-p^{\left(0.6\right)}\sin\left(0.396442191629p^{\left(0.6\right)}\right)
+    double powerpower = pow(power,0.6);
+    double delined = power - powerpower * sin(0.39644219162 * powerpower);
+    return delined*(power >=0 ? 1 : -1) * (abs(power) >= DBL_MIN*10);
 }
 
 double RobotPhysics::motor_adjustments(double power) {
@@ -28,7 +31,7 @@ double RobotPhysics::motor_adjustments(double power) {
 
 // Motor powers to motor speeds
 void RobotPhysics::motors_to_ang_vels(double const m_powers[4], double ang_vels[4]) {
-    double k =  sim_robot.model.motor_max_rpm * 2.0 * PI / 100.0;
+    double k = sim_robot.model.motor_max_rps * 2.0 * PI / 100.0;
     ang_vels[0] = motor_adjustments(m_powers[0]) * sim_robot.model.motor_scale_FL * k;
     ang_vels[1] = motor_adjustments(m_powers[1]) * sim_robot.model.motor_scale_FR * k;
     ang_vels[2] = motor_adjustments(m_powers[2]) * sim_robot.model.motor_scale_RL * k;
@@ -36,7 +39,7 @@ void RobotPhysics::motors_to_ang_vels(double const m_powers[4], double ang_vels[
 }
 
 void RobotPhysics::motors_to_ang_accels(double const m_powers[4], double const ang_vels[4], double ang_accels[4]) {
-    double k = sim_robot.model.motor_max_rpm * 2.0 * PI / 100.0;
+    double k = sim_robot.model.motor_max_rps * 2.0 * PI / 100.0;
     double inv_tau = 1.0 / sim_robot.model.motor_time_constant;
     ang_accels[0] = ( motor_adjustments(m_powers[0]) * sim_robot.model.motor_scale_FL * k - ang_vels[0]) * inv_tau;
     ang_accels[1] = ( motor_adjustments(m_powers[1]) * sim_robot.model.motor_scale_FR * k - ang_vels[1]) * inv_tau;
@@ -47,21 +50,21 @@ void RobotPhysics::motors_to_ang_accels(double const m_powers[4], double const a
 
 // Mechanum transforms
 void RobotPhysics::angular_to_robot(double const angular[4], double robot[3]) {
-    double turn_const = 0.25 / (sim_robot.model.wheel_length + sim_robot.model.wheel_width);
-    robot[0] = sim_robot.model.wheel_rad * (   angular[0] + angular[1] + angular[2] + angular[3]) * 0.25;
-    robot[1] = sim_robot.model.wheel_rad * (   angular[0] - angular[1] - angular[2] + angular[3]) * 0.25;
-    robot[2] = sim_robot.model.wheel_rad * ( - angular[0] + angular[1] - angular[2] + angular[3]) * turn_const;
+    double turn_const = 0.5 / (sim_robot.model.wheel_length + sim_robot.model.wheel_width);
+    robot[0] = sim_robot.model.wheel_rad * (   angular[0] + angular[1] + angular[2] + angular[3]) *  0.25;
+    robot[1] = sim_robot.model.wheel_rad * (   angular[0] - angular[1] - angular[2] + angular[3]) * -0.25;
+    robot[2] = sim_robot.model.wheel_rad * ( - angular[0] + angular[1] - angular[2] + angular[3]) *  turn_const;
 }
 
 void RobotPhysics::robot_to_angular(double angular[4], double const robot[3]) {
-    double turn_const = (sim_robot.model.wheel_length + sim_robot.model.wheel_width);
-    angular[0] = (robot[0] + robot[1] - robot[2] * turn_const) / sim_robot.model.wheel_rad;
-    angular[1] = (robot[0] - robot[1] + robot[2] * turn_const) / sim_robot.model.wheel_rad;
-    angular[2] = (robot[0] - robot[1] - robot[2] * turn_const) / sim_robot.model.wheel_rad;
-    angular[3] = (robot[0] + robot[1] + robot[2] * turn_const) / sim_robot.model.wheel_rad;
+    double turn_const = (sim_robot.model.wheel_length + sim_robot.model.wheel_width) * 0.5;
+    angular[0] = (robot[0] - robot[1] - robot[2] * turn_const) / sim_robot.model.wheel_rad;
+    angular[1] = (robot[0] + robot[1] + robot[2] * turn_const) / sim_robot.model.wheel_rad;
+    angular[2] = (robot[0] + robot[1] - robot[2] * turn_const) / sim_robot.model.wheel_rad;
+    angular[3] = (robot[0] - robot[1] + robot[2] * turn_const) / sim_robot.model.wheel_rad;
 }
 
-// Robot_frame to global transforms (actually identical)
+// Robot_frame to global transforms (almost identical)
 void RobotPhysics::robot_to_global(double const robot[3], double global[3], double const robot_in_global[3]) {
     global[0] = robot[0] * cos(robot_in_global[2]) - robot[1] * sin(robot_in_global[2]);
     global[1] = robot[0] * sin(robot_in_global[2]) + robot[1] * cos(robot_in_global[2]);

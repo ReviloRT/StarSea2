@@ -13,9 +13,10 @@ struct RobotModel {
     double length = 160;
     double wheel_length = 177;
     double wheel_width = 155;
-    double wheel_rad = 25;
-    double motor_max_rpm = 2;
-    double motor_time_constant = 0.4;
+    double wheel_rad = 27;
+    double motor_max_rps = 3.2;
+    // double motor_max_rps = 1;
+    double motor_time_constant = 0.05;
 
     double ulx = 60;
     double uly = 0;
