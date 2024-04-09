@@ -11,10 +11,10 @@
 struct RobotModel {
     double width = 190;
     double length = 160;
-    double wheel_length = 177;
-    double wheel_width = 155;
+    double wheel_length = 195; // Too big but match real rotation
+    double wheel_width = 180; // Too big but match real rotation
     double wheel_rad = 27;
-    double motor_max_rps = 3.2;
+    double motor_max_rps = 3.6;
     // double motor_max_rps = 1;
     double motor_time_constant = 0.05;
 
@@ -31,7 +31,7 @@ struct RobotModel {
     double irL0y = 60;
     double irL0rot = PI/2;
     double irL1x = -60;
-    double irL1y = 45;
+    double irL1y = 54;
     double irL1rot = PI/2;
 
     double motor_scale_FL = -1.15;

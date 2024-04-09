@@ -27,6 +27,8 @@
 #include <string>
 #include <iostream>
 
+static int serial_output_count = 0;
+
 extern void pwmWrite(int pin, int micros);
 
 class String : public std::string {
@@ -40,6 +42,7 @@ public:
 
 struct SoftwareSerial {
 private:
+    bool active = false;
 public:
     SoftwareSerial();
     SoftwareSerial(int pin_tx, int pin_rx);
