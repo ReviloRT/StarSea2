@@ -58,24 +58,39 @@ double RobotSim::get_infrared(int pin) {
         model_ir_x = model.irS0x;
         model_ir_y = model.irS0y;
         model_ir_rot = model.irS0rot;
+        #ifdef IR_SHORT_SCALE_DATASHEET
         scale = IR_SHORT_SCALE_DATASHEET;
         exponent = IR_SHORT_EXPONENT_DATASHEET;
+        #else
+        scale = IR_SHORT_SCALE_DATASHEET0;
+        exponent = IR_SHORT_EXPONENT_DATASHEET0;
+        #endif
         break;
     case IR_SHORT_PIN_1:
         if (code.irs_1_pindir == OUTPUT) return 0;
         model_ir_x = model.irS1x;
         model_ir_y = model.irS1y;
         model_ir_rot = model.irS1rot;
+        #ifdef IR_SHORT_SCALE_DATASHEET
         scale = IR_SHORT_SCALE_DATASHEET;
         exponent = IR_SHORT_EXPONENT_DATASHEET;
+        #else
+        scale = IR_SHORT_SCALE_DATASHEET1;
+        exponent = IR_SHORT_EXPONENT_DATASHEET1;
+        #endif
         break;
     case IR_LONG_PIN_0:
         if (code.irl_0_pindir == OUTPUT) return 0;
         model_ir_x = model.irL0x;
         model_ir_y = model.irL0y;
         model_ir_rot = model.irL0rot;
+        #ifdef IR_LONG_SCALE_DATASHEET
         scale = IR_LONG_SCALE_DATASHEET;
         exponent = IR_LONG_EXPONENT_DATASHEET;
+        #else
+        scale = IR_LONG_SCALE_DATASHEET0;
+        exponent = IR_LONG_EXPONENT_DATASHEET0;
+        #endif
         is_long = true;
         break;
     case IR_LONG_PIN_1:
@@ -83,8 +98,13 @@ double RobotSim::get_infrared(int pin) {
         model_ir_x = model.irL1x;
         model_ir_y = model.irL1y;
         model_ir_rot = model.irL1rot;
+        #ifdef IR_LONG_SCALE_DATASHEET
         scale = IR_LONG_SCALE_DATASHEET;
         exponent = IR_LONG_EXPONENT_DATASHEET;
+        #else
+        scale = IR_LONG_SCALE_DATASHEET1;
+        exponent = IR_LONG_EXPONENT_DATASHEET1;
+        #endif
         is_long = true;
         break;
     default:

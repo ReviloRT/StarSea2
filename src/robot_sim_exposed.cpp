@@ -69,14 +69,14 @@ void pinMode(int pin, bool direction) {
     case US_PIN_ECHO:
         sim_robot.code.ul_E_pindir = direction;
         break;
-    case T0_PIN:
-        break;
-    case T1_PIN:
-        break;
-    case T2_PIN:
-        break;
-    case T3_PIN:
-        break;
+    // case T0_PIN:
+    //     break;
+    // case T1_PIN:
+    //     break;
+    // case T2_PIN:
+    //     break;
+    // case T3_PIN:
+    //     break;
     case FL_MOTOR_PIN:
         sim_robot.code.m_FL_pindir = direction;
         break;

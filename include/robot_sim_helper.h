@@ -60,6 +60,7 @@ private:
 public:
     Servo();
     void attach(int pin);
+    void write(int angle);
     void writeMicroseconds(int micros);
 };
 

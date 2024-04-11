@@ -38,6 +38,9 @@ Servo::Servo() {}
 void Servo::attach(int new_pin) {
     this->pin = new_pin;
 }
+void Servo::write(int micros) {
+    // pwmWrite(this->pin, map_range(micros,0,180,1500,2500));
+}
 void Servo::writeMicroseconds(int micros) {
     pwmWrite(this->pin, micros);
 }
