@@ -239,10 +239,10 @@ void run_robot_code() {
         if (tar_time > sim_time) {
             loop();
             sim_robot.lock();
-            sim_robot.add_time(10.0/1000.0);
+            sim_robot.add_time(40.0/1000.0);
             sim_robot.unlock();
         }
-        std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(10));
     }
     
 }

@@ -6,7 +6,7 @@
 
 #define SCREEN_WIDTH   1280
 #define SCREEN_HEIGHT  720
-#define FRAME_RATE 100
+#define FRAME_RATE 60
 #define PI 3.1415926535
 
 

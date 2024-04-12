@@ -2,6 +2,8 @@ project('starsea2', 'c', 'cpp',
   version : '0.1',
   default_options : ['warning_level=0'])
 
+# add_global_arguments('-Ofast', language : 'cpp')
+
 sdl2_dep = dependency('sdl2')
 sdl2_main_dep = dependency('sdl2main')
 
@@ -40,6 +42,7 @@ robot_sources = [
            'submodules/706Project1/src/karman.cpp',
            'submodules/706Project1/src/robotController.cpp',
            'submodules/706Project1/src/localisation.cpp',
+            'submodules/706Project1/src/stateMachine.cpp',
            ]
 
 

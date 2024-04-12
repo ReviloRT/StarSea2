@@ -18,6 +18,12 @@ STUFF:
 
 Yep, Over Powered. Like my initals.
 
+## REQUIREMENTS
+Requires:
+- pip
+- gcc (or other compiler) (see https://cpp-lang.net/tools/standalone/compilers/setup-gcc-windows/)
+- ninja
+
 ## Setup:
 1. Ensure you have meson installed: 
 
@@ -32,6 +38,8 @@ Yep, Over Powered. Like my initals.
 `mkdir subprojects`
 
 `meson wrap install sdl2`
+
+*If this command fails, go to the sdl2_included branch instead and skip the meson wrap command.*
 
 `meson setup build`
 
